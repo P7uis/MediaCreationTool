@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-M826HTSEHV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-M826HTSEHV');
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Recorder</title>
+    <link rel="icon" type="image/x-icon" href="/images/glados.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 640px;
+        }
+        video {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            width: 100%;
+            height: auto;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        /* Hide video controls and time bar */
+        video::-webkit-media-controls {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-panel {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-play-button {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-timeline {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-current-time-display {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-time-remaining-display {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-mute-button {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-volume-slider {
+            display: none !important;
+        }
+        
+        video::-webkit-media-controls-fullscreen-button {
+            display: none !important;
+        }
+
+        /* Firefox */
+        video::-moz-range-thumb {
+            display: none !important;
+        }
+        
+        video::-moz-range-track {
+            display: none !important;
+        }
+        
+        /* Edge/IE */
+        video::-ms-fill-lower {
+            display: none !important;
+        }
+        
+        video::-ms-fill-upper {
+            display: none !important;
+        }
+        
+        video::-ms-thumb {
+            display: none !important;
+        }
+
+        /* General control hiding */
+        video::-webkit-media-controls-enclosure {
+            display: none !important;
+        }
+
+        video::-webkit-media-controls-overlay-enclosure {
+            display: none !important;
+        }
+
+        /* Remove controls attribute programmatically */
+        video[controls] {
+            outline: none !important;
+        }
+
+        button:disabled {
+            opacity: 0.35;
+            filter: grayscale(100%);
+            cursor: not-allowed;
+            box-shadow: none !important;
+            transform: none !important;
+            border: none !important;
+        }
+
+        .button-group > button:disabled:hover {
+            background-color: inherit !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .device-info {
+            margin: 10px 0;
+            font-size: 12px;
+            line-height: 1.2;
+            text-align: center;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .button-group > button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1.2;
+            text-align: center;
+            height: 40px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .button-group > button:first-child {
+            margin-left: 0;
+        }
+        .button-group > button:last-child {
+            margin-right: 0;
+        }
+        .button-group > button:hover {
+            background-color: #0056b3;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transform: none;
+        }
+        .button-group > button:active {
+            background-color: #003d7a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transform: none;
+        }
+        #switchCamera {
+            background-color: #fd7e14;
+        }
+        #switchMic {
+            background-color: #ffc107;
+        }
+        #takePhoto {
+            background-color: #007bff;
+        }
+        #recordButton {
+            background-color: #28a745;
+        }
+        #recordButton.recording {
+            background-color: #dc3545;
+        }
+        #toggleStreamCapture {
+            background-color: #17a2b8;
+        }
+        #toggleStreamCapture.recording {
+            background-color: #dc3545;
+        }
+        #toggleAudioRecording {
+            background-color: #6f42c1;
+        }
+        #toggleAudioRecording.recording {
+            background-color: #dc3545;
+        }
+        #toggleScreenRecording {
+            background-color: #ff6699;
+        }
+        #toggleScreenRecording.recording {
+            background-color: #dc3545;
+        }
+        #mirrorToggle {
+            background-color: #00ff00; /* lime */
+        }
+        #mirrorToggle.mirrored {
+            background-color: #00cc00;
+        }
+        #muteToggle {
+            background-color: #000; /* black */
+            border: 2px solid #00c853;
+            box-shadow:
+                0 0 0 2px rgba(0, 200, 83, 0.35),
+                0 0 14px rgba(0, 200, 83, 0.35);
+            color: #fff;
+        }
+        #muteToggle.muted {
+            border-color: #ff1744;
+            box-shadow:
+                0 0 0 2px rgba(255, 23, 68, 0.35),
+                0 0 14px rgba(255, 23, 68, 0.35);
+        }
+        .checkbox-group {
+            margin-bottom: 20px;
+        }
+        .pip-video {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 240px;
+            height: auto;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 9999;
+            cursor: move;
+            object-fit: contain;
+            background-color: black;
+            transition: transform 0.2s ease;
+            pointer-events: auto;
+        }
+        .pip-video:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transform: scale(1.02);
+        }
+        .pip-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* Comprehensive screen sharing indicator hiding */
+        /* Target Chrome's sharing indicator container */
+        .chrome-media-toolbar-container,
+        div[class*="media-toolbar-container"],
+        div[class*="sharing-indicator"],
+        div[class*="screen-sharing"],
+        div[class*="-sharing-"],
+        div[class*="mediaDevices"],
+        div[id*="sharing-indicator"],
+        div[id*="screen-sharing"],
+        div[role="dialog"][class*="sharing"],
+        div[class*="cast-container"],
+        div[class*="record-container"] {
+            visibility: hidden !important;
+            opacity: 0 !important;
+            transform: translateY(100%) !important;
+            height: 0 !important;
+            position: fixed !important;
+            bottom: -100vh !important;
+            pointer-events: none !important;
+        }
+
+        /* Target the inner elements as well */
+        div[class*="sharing"] *,
+        div[class*="screen-sharing"] *,
+        div[class*="mediaDevices"] * {
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        /* Force hide any potential overlays */
+        div[class*="overlay"][class*="sharing"],
+        div[class*="overlay"][class*="recording"],
+        div[class*="overlay"][class*="screen"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        /* Hide potential iframes used for indicators */
+        iframe[class*="sharing"],
+        iframe[class*="recording"],
+        iframe[id*="sharing"],
+        iframe[id*="recording"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        /* Additional sharing indicator styles */
+        div[class*="sharing"],
+        div[class*="record"],
+        div[class*="cast"],
+        div[class*="screen-capture"],
+        div[class*="screen-share"],
+        div[class*="indicator"],
+        div[role="status"],
+        div[role="alert"][class*="sharing"],
+        div[aria-live="polite"],
+        div[aria-live],
+        div[class*="notification"],
+        div[class*="toast"],
+        div[class*="snackbar"],
+        div[class*="popup"],
+        .x-screen-sharing-indicator,
+        .sharing-indicator,
+        .screen-sharing-indicator,
+        [class*="screenshare"],
+        [class*="screen-share"],
+        [class*="notification"],
+        [class*="toast"],
+        [class*="snackbar"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: fixed !important;
+            bottom: -9999px !important;
+            left: -9999px !important;
+            z-index: -1 !important;
+            pointer-events: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            clip: rect(0 0 0 0) !important;
+            margin: -1px !important;
+            padding: 0 !important;
+            border: 0 !important;
+        }
+
+        /* Target Chrome's native notifications */
+        div[style*="position: fixed"][style*="bottom"],
+        div[style*="position:fixed"][style*="bottom"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        @media (max-width: 600px) {
+            .button-group > button {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+            .pip-video {
+                width: 120px;
+                height: auto;
+            }
+        }
+
+        /* Target all possible sharing notifications */
+        div[class*="sharing"],
+        div[class*="record"],
+        div[class*="cast"],
+        div[class*="screen-capture"],
+        div[class*="screen-share"],
+        div[class*="indicator"],
+        div[role="status"],
+        div[role="alert"],
+        div[aria-live],
+        div[class*="notification"],
+        div[class*="toast"],
+        div[class*="snackbar"],
+        div[class*="popup"],
+        div[style*="position: fixed"],
+        div[style*="bottom: 0"],
+        div[style*="z-index"],
+        .x-screen-sharing-indicator,
+        .sharing-indicator,
+        .screen-sharing-indicator,
+        [class*="screenshare"],
+        [class*="screen-share"],
+        [class*="notification"],
+        [class*="toast"],
+        [class*="snackbar"],
+        [class*="overlay"],
+        [role="dialog"],
+        [aria-modal="true"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: fixed !important;
+            bottom: -9999px !important;
+            left: -9999px !important;
+            z-index: -1 !important;
+            pointer-events: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            clip: rect(0 0 0 0) !important;
+            margin: -1px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            transform: translateY(100%) !important;
+        }
+
+        @media (max-width: 600px) {
+            .button-group > button {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+            .pip-video {
+                width: 120px;
+                height: auto;
+            }
+        }
+
+        /* Target Chrome notifications while preserving PIP */
+        div[class*="sharing"]:not(.pip-video):not(.pip-container),
+        div[class*="record"]:not(.pip-video):not(.pip-container),
+        div[class*="cast"]:not(.pip-video):not(.pip-container),
+        div[class*="screen-capture"]:not(.pip-video):not(.pip-container),
+        div[class*="screen-share"]:not(.pip-video):not(.pip-container),
+        div[class*="indicator"]:not(.pip-video):not(.pip-container),
+        div[role="status"]:not(.pip-video):not(.pip-container),
+        div[role="alert"]:not(.pip-video):not(.pip-container),
+        div[aria-live]:not(.pip-video):not(.pip-container),
+        div[class*="notification"]:not(.pip-video):not(.pip-container),
+        div[class*="toast"]:not(.pip-video):not(.pip-container),
+        div[class*="snackbar"]:not(.pip-video):not(.pip-container),
+        div[class*="popup"]:not(.pip-video):not(.pip-container),
+        div[style*="position: fixed"]:not(.pip-video):not(.pip-container),
+        div[style*="bottom: 0"]:not(.pip-video):not(.pip-container),
+        div[style*="z-index"]:not(.pip-video):not(.pip-container),
+        .x-screen-sharing-indicator:not(.pip-video):not(.pip-container),
+        .sharing-indicator:not(.pip-video):not(.pip-container),
+        .screen-sharing-indicator:not(.pip-video):not(.pip-container),
+        [class*="screenshare"]:not(.pip-video):not(.pip-container),
+        [class*="screen-share"]:not(.pip-video):not(.pip-container),
+        [class*="notification"]:not(.pip-video):not(.pip-container),
+        [class*="toast"]:not(.pip-video):not(.pip-container),
+        [class*="snackbar"]:not(.pip-video):not(.pip-container),
+        [class*="overlay"]:not(.pip-video):not(.pip-container),
+        [role="dialog"]:not(.pip-video):not(.pip-container),
+        [aria-modal="true"]:not(.pip-video):not(.pip-container) {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: fixed !important;
+            bottom: -9999px !important;
+            left: -9999px !important;
+            z-index: -1 !important;
+            pointer-events: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            clip: rect(0 0 0 0) !important;
+            margin: -1px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            transform: translateY(100%) !important;
+        }
+
+        /* Ensure PIP stays visible */
+        .pip-video,
+        .pip-container {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            pointer-events: auto !important;
+            height: auto !important;
+            width: auto !important;
+            overflow: visible !important;
+            clip: auto !important;
+            margin: initial !important;
+            transform: none !important;
+        }
+
+        @media (max-width: 600px) {
+            .button-group > button {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+            .pip-video {
+                width: 120px;
+                height: auto;
+            }
+        }
+
+        /* Hide sharing notifications more aggressively */
+        .x-screen-sharing,
+        .x-screen-sharing-indicator,
+        div[class*="sharing-indicator"],
+        div[class*="screen-sharing"],
+        div[class*="sharing-banner"],
+        div[class*="sharing-tooltip"],
+        div[class*="chrome-sharing"],
+        div[class*="sharing-dialog"],
+        div[class*="sharing-message"],
+        div[class*="sharing-status"],
+        div[class*="sharing-notification"],
+        div[role="dialog"][class*="sharing"],
+        div[role="status"][class*="sharing"],
+        div[role="alert"][class*="sharing"],
+        div[aria-live="polite"],
+        div[class*="status-message"],
+        div[class*="status-banner"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            z-index: -9999 !important;
+            pointer-events: none !important;
+            transform: translateY(200%) !important;
+        }
+
+        @media (max-width: 600px) {
+            .button-group > button {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+        }
+
+        /* Add global CSS to hide notifications */
+        div[role="status"],
+        div[role="alert"],
+        div[class*="notification"],
+        div[class*="toast"],
+        div[class*="banner"],
+        div[class*="sharing"],
+        div[style*="fixed"],
+        div[style*="notification"],
+        div[aria-live="polite"],
+        div[aria-live="assertive"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            clip: rect(0, 0, 0, 0) !important;
+            pointer-events: none !important;
+            max-height: 0 !important;
+            max-width: 0 !important;
+            transform: translateY(-9999px) !important;
+        }
+
+        /* Edge-specific notification hiding is handled in JavaScript
+           (see injectEdgeNotificationCSS / setupNotificationHider). */
+    </style>
+    <!-- Dynamic notification hider style tag -->
+    <style id="notification-hider"></style>
+</head>
+<body>
+
+    <div class="container">
+        <video id="video" autoplay muted></video>
+
+        <div class="device-info">
+            <div id="cameraInfo">Selected Camera: None</div>
+            <div id="micInfo">Selected Microphone: None</div>
+        </div>
+
+        <div id="recordingStatus" aria-live="polite" style="margin: 8px 0; font-size: 12px;"></div>
+
+        <div class="controls">
+            <div class="button-group">
+                <button id="switchCamera" aria-label="Switch camera">Switch Camera</button>
+                <button id="switchMic" aria-label="Switch microphone">Switch Microphone</button>
+                <button id="takePhoto" aria-label="Take photo from video">Take Photo</button>
+                <button id="recordButton" aria-label="Toggle camera recording">Start Recording</button>
+            </div>
+            <div class="button-group">
+                <button id="mirrorToggle" aria-label="Mirror"><span id="mirrorToggleText">Mirror</span></button>
+                <button id="muteToggle" aria-label="Mute"><span id="muteToggleText">Mic is enabled</span></button>
+            </div>
+            <div class="button-group">
+                <button id="toggleScreenRecording" aria-label="Toggle screen capture recording">Start Screen Capture</button>
+                <button id="toggleStreamCapture" aria-label="Toggle stream capture recording">Start Stream Capture</button>
+                <button id="toggleAudioRecording" aria-label="Toggle audio-only recording">Start Audio Recording</button>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display:none;">
+            <div class="progress-bar">
+                <span id="progressBar"></span>
+            </div>
+            <div id="progressText" class="progress-text"></div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const recordButton = document.getElementById('recordButton');
+        const takePhotoButton = document.getElementById('takePhoto');
+        const switchCameraButton = document.getElementById('switchCamera');
+        const switchMicButton = document.getElementById('switchMic');
+        const mirrorToggleButton = document.getElementById('mirrorToggle');
+        const mirrorToggleText = document.getElementById('mirrorToggleText');
+        const muteToggleButton = document.getElementById('muteToggle');
+        const muteToggleText = document.getElementById('muteToggleText');
+        const toggleAudioRecordingButton = document.getElementById('toggleAudioRecording');
+        const toggleScreenRecordingButton = document.getElementById('toggleScreenRecording');
+        const toggleStreamCaptureButton = document.getElementById('toggleStreamCapture');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const cameraInfo = document.getElementById('cameraInfo');
+        const micInfo = document.getElementById('micInfo');
+        const recordingStatus = document.getElementById('recordingStatus');
+
+        // Lock other recording buttons while one mode is active.
+        // This prevents starting multiple recorder types at the same time.
+        const recordingTypeButtons = [
+            recordButton,
+            toggleScreenRecordingButton,
+            toggleStreamCaptureButton,
+            toggleAudioRecordingButton
+        ];
+        let activeRecordingType = null;
+
+        function setRecordingLock(activeButton) {
+            recordingTypeButtons.forEach((btn) => {
+                const isActive = btn === activeButton;
+                btn.disabled = !isActive;
+            });
+        }
+
+        function clearRecordingLock() {
+            activeRecordingType = null;
+            recordingTypeButtons.forEach((btn) => {
+                btn.disabled = false;
+            });
+        }
+
+        let currentStream = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let screenStream = null;
+        let audioRecorder = null;
+        let audioChunks = [];
+        let suppressAudioDownload = false;
+        let screenMediaRecorder = null;
+        let screenRecordedChunks = [];
+        let streamCaptureRecorder = null;
+        let streamCaptureChunks = [];
+        let pipVideo = null;
+        let screenCaptureStarting = false;
+
+        // Camera-recording pipeline (canvas for mirroring + WebAudio gain for mute).
+        let cameraRecordingCanvas = null;
+        let cameraRecordingCtx = null;
+        let cameraCanvasStream = null;
+        let cameraDrawRequestId = null;
+        let cameraRecordingActive = false;
+        let cameraAudioContext = null;
+        let cameraAudioGainNode = null;
+        let cameraAudioSourceNode = null;
+        let cameraAudioDest = null;
+
+        // Screen/stream recording pipeline (canvas mirroring + gain-based muting).
+        let screenRecordingCanvas = null;
+        let screenRecordingCtx = null;
+        let screenCanvasStream = null;
+        let screenDrawRequestId = null;
+        let screenRecordingActive = false;
+        let screenAudioContext = null;
+        let screenAudioGainNode = null;
+        let screenAudioDest = null;
+        let screenMicAudioStream = null;
+        let screenPreviewVideoEl = null;
+
+        // Stream-capture pipeline state (mute gain + PiP camera mirroring).
+        let streamCaptureAudioContext = null;
+        let streamCaptureAudioGainNode = null;
+        let streamCaptureAudioDest = null;
+        let streamCaptureMicAudioStream = null;
+        let streamCaptureCameraVideoEl = null;
+        let streamCaptureCameraDrawVideoEl = null;
+        let streamCaptureScreenVideoEl = null;
+        let streamCaptureCameraStream = null;
+        let streamCaptureCameraOverlayCanvas = null;
+        let streamCaptureCameraOverlayCtx = null;
+
+        let streamRecordingCanvas = null;
+        let streamRecordingCtx = null;
+        let streamCanvasStream = null;
+        let streamDrawRequestId = null;
+        let streamRecordingActive = false;
+
+        let cameraList = [];
+        let microphoneList = [];
+        let currentCameraIndex = 0;
+        let currentMicIndex = 0;
+        let mirrorFeed = false;
+        let isMutedVideoAudio = false;
+        let currentCameraDeviceId = null;
+        let currentMicDeviceId = null;
+
+        function updateMirrorToggleUI() {
+            // Only mirror the word; keep the button clickable and stable.
+            mirrorToggleText.style.display = 'inline-block';
+            mirrorToggleText.style.transform = mirrorFeed ? 'scaleX(-1)' : 'scaleX(1)';
+            mirrorToggleButton.classList.toggle('mirrored', mirrorFeed);
+        }
+
+        function updateMuteToggleUI() {
+            muteToggleText.textContent = isMutedVideoAudio ? 'Mic is muted' : 'Mic is enabled';
+            muteToggleButton.classList.toggle('muted', isMutedVideoAudio);
+            muteToggleButton.setAttribute('aria-pressed', isMutedVideoAudio ? 'true' : 'false');
+        }
+
+        function getTimestamp() {
+            const now = new Date();
+            const year = String(now.getFullYear()).slice(2); // Last 2 digits of the year
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            return `${year}${month}${day}${hours}${minutes}-`;
+        }
+
+        async function initializeDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                cameraList = devices.filter(device => device.kind === 'videoinput');
+                microphoneList = devices.filter(device => device.kind === 'audioinput');
+                
+                if (cameraList.length > 0) {
+                    const deviceId = cameraList[0].deviceId;
+                    currentCameraDeviceId = deviceId;
+                    
+                    // Get camera capabilities
+                    const testStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: deviceId } });
+                    const videoTrack = testStream.getVideoTracks()[0];
+                    const capabilities = videoTrack.getCapabilities();
+                    console.log("Camera capabilities:", capabilities);
+                    
+                    // Store capabilities for later use
+                    window.cameraCapabilities = capabilities;
+                    
+                    // Clean up test stream
+                    testStream.getTracks().forEach(track => track.stop());
+                    
+                    startCamera(deviceId);
+                } else {
+                    console.log("No cameras found.");
+                }
+
+                if (microphoneList.length > 0) {
+                    currentMicDeviceId = microphoneList[0].deviceId;
+                } else {
+                    console.log("No microphones found.");
+                }
+            } catch (err) {
+                console.error("Error initializing devices: " + err);
+            }
+        }
+
+        async function startCamera(deviceId) {
+            try {
+                // Get stored camera capabilities
+                const capabilities = window.cameraCapabilities;
+                
+                // Build video constraints based on capabilities
+                const videoConstraints = {
+                    deviceId: deviceId
+                };
+
+                if (capabilities) {
+                    // Set highest available width and height
+                    if (capabilities.width && capabilities.height) {
+                        videoConstraints.width = { ideal: capabilities.width.max };
+                        videoConstraints.height = { ideal: capabilities.height.max };
+                    }
+
+                    // Set best available frame rate
+                    if (capabilities.frameRate) {
+                        videoConstraints.frameRate = { 
+                            ideal: Math.min(30, capabilities.frameRate.max),
+                            max: capabilities.frameRate.max 
+                        };
+                    }
+
+                    // Use native aspect ratio if available
+                    if (capabilities.aspectRatio) {
+                        videoConstraints.aspectRatio = { ideal: capabilities.aspectRatio.max };
+                    }
+                } else {
+                    // Fallback to standard HD constraints if capabilities not available
+                    videoConstraints.width = { ideal: 1920 };
+                    videoConstraints.height = { ideal: 1080 };
+                    videoConstraints.frameRate = { ideal: 30, max: 60 };
+                    videoConstraints.aspectRatio = { ideal: 16/9 };
+                }
+
+                const constraints = {
+                    video: videoConstraints,
+                    audio: currentMicDeviceId ? {
+                        deviceId: currentMicDeviceId,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000,
+                        sampleSize: 16
+                    } : true
+                };
+
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Get actual track settings
+                const videoTrack = currentStream.getVideoTracks()[0];
+                const settings = videoTrack.getSettings();
+                console.log("Active camera settings:", settings);
+                
+                // Update device info with resolution
+                updateDeviceInfo(settings);
+
+                video.srcObject = currentStream;
+                updateMirroring();
+
+                // Set video element properties for better quality
+                video.setAttribute('playsinline', true);
+                video.setAttribute('controls', false);
+                video.style.objectFit = 'cover';
+
+            } catch (err) {
+                console.error("Error starting camera: " + err);
+            }
+        }
+
+        function updateMirroring() {
+            video.style.transform = mirrorFeed ? 'scaleX(-1)' : 'scaleX(1)';
+        }
+
+        async function replaceAudioTrackInCurrentStream(deviceId) {
+            if (!currentStream) return;
+            try {
+                // Stop and remove old audio tracks only (keep the video stream).
+                currentStream.getAudioTracks().forEach(track => {
+                    currentStream.removeTrack(track);
+                    track.stop();
+                });
+
+                const audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        deviceId: deviceId,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000,
+                        sampleSize: 16
+                    }
+                });
+
+                audioStream.getAudioTracks().forEach(track => {
+                    currentStream.addTrack(track);
+                });
+
+                // Keep the video element bound to the updated stream.
+                video.srcObject = currentStream;
+                updateDeviceInfo();
+                updateMirroring();
+            } catch (err) {
+                console.error("Error replacing audio track: " + err);
+            }
+        }
+
+        function updateDeviceInfo(settings = null) {
+            if (cameraList.length > 0) {
+                let cameraText = `Selected Camera: ${cameraList[currentCameraIndex].label || 'Unknown'}`;
+                if (settings) {
+                    cameraText += `\nResolution: ${settings.width}x${settings.height}`;
+                    cameraText += `\nFrame Rate: ${settings.frameRate}fps`;
+                }
+                cameraInfo.textContent = cameraText;
+            } else {
+                cameraInfo.textContent = 'Selected Camera: None';
+            }
+
+            if (microphoneList.length > 0) {
+                micInfo.textContent = `Selected Microphone: ${microphoneList[currentMicIndex].label || 'Unknown'}`;
+            } else {
+                micInfo.textContent = 'Selected Microphone: None';
+            }
+        }
+
+        async function startRecording() {
+            try {
+                if (!currentStream) {
+                    throw new Error('No active camera stream.');
+                }
+
+                // If we somehow have stale artifacts from an earlier attempt, remove them.
+                cleanupCameraRecordingArtifacts();
+
+                const options = {
+                    mimeType: 'video/webm;codecs=vp9,opus',
+                    videoBitsPerSecond: 8000000, // 8 Mbps
+                    audioBitsPerSecond: 128000   // 128 kbps
+                };
+                
+                // Fallback if VP9 is not supported
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm;codecs=vp8,opus';
+                }
+
+                // Canvas mirroring: encode frames from a canvas so Mirror updates immediately in the recorded output.
+                const videoTrack = currentStream.getVideoTracks()[0];
+                const settings = (videoTrack && videoTrack.getSettings) ? videoTrack.getSettings() : {};
+                const w = Math.max(1, Math.floor(settings.width || video.videoWidth || 1280));
+                const h = Math.max(1, Math.floor(settings.height || video.videoHeight || 720));
+
+                cameraRecordingCanvas = document.createElement('canvas');
+                cameraRecordingCanvas.width = w;
+                cameraRecordingCanvas.height = h;
+                cameraRecordingCtx = cameraRecordingCanvas.getContext('2d');
+
+                const fps = 30;
+                cameraCanvasStream = cameraRecordingCanvas.captureStream(fps);
+                const canvasVideoTrack = cameraCanvasStream.getVideoTracks()[0];
+
+                // Audio muting without restarting (camera mode): route audio through a GainNode.
+                let composedStreamTracks = [canvasVideoTrack];
+
+                const audioTracks = currentStream.getAudioTracks ? currentStream.getAudioTracks() : [];
+                if (audioTracks && audioTracks.length > 0) {
+                    cameraAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    cameraAudioGainNode = cameraAudioContext.createGain();
+                    cameraAudioGainNode.gain.value = isMutedVideoAudio ? 0 : 1;
+
+                    const audioOnlyStream = new MediaStream(audioTracks);
+                    cameraAudioSourceNode = cameraAudioContext.createMediaStreamSource(audioOnlyStream);
+                    cameraAudioDest = cameraAudioContext.createMediaStreamDestination();
+
+                    cameraAudioSourceNode.connect(cameraAudioGainNode);
+                    cameraAudioGainNode.connect(cameraAudioDest);
+
+                    composedStreamTracks = [
+                        canvasVideoTrack,
+                        ...cameraAudioDest.stream.getAudioTracks()
+                    ];
+                }
+
+                const composedStream = new MediaStream(composedStreamTracks);
+
+                mediaRecorder = new MediaRecorder(composedStream, options);
+                recordedChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = getTimestamp() + 'video.webm';
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                    cleanupCameraRecordingArtifacts();
+                };
+
+                mediaRecorder.start();
+                cameraRecordingActive = true;
+                
+                const drawFrame = () => {
+                    if (!cameraRecordingActive || !cameraRecordingCtx) return;
+                    cameraRecordingCtx.clearRect(0, 0, w, h);
+                    if (mirrorFeed) {
+                        cameraRecordingCtx.save();
+                        cameraRecordingCtx.translate(w, 0);
+                        cameraRecordingCtx.scale(-1, 1);
+                        cameraRecordingCtx.drawImage(video, 0, 0, w, h);
+                        cameraRecordingCtx.restore();
+                    } else {
+                        cameraRecordingCtx.drawImage(video, 0, 0, w, h);
+                    }
+                    cameraDrawRequestId = requestAnimationFrame(drawFrame);
+                };
+
+                cameraDrawRequestId = requestAnimationFrame(drawFrame);
+
+                recordButton.textContent = 'Stop Recording';
+                recordButton.classList.add('recording');
+                if (recordingStatus) recordingStatus.textContent = 'Camera recording started.';
+                recordButton.setAttribute('aria-pressed', 'true');
+                activeRecordingType = 'camera';
+                setRecordingLock(recordButton);
+            } catch (err) {
+                console.error("Error starting recording: " + err);
+                cleanupCameraRecordingArtifacts();
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+
+            cameraRecordingActive = false;
+            if (cameraDrawRequestId) {
+                cancelAnimationFrame(cameraDrawRequestId);
+                cameraDrawRequestId = null;
+            }
+
+            recordButton.textContent = 'Start Recording';
+            recordButton.classList.remove('recording');
+            if (recordingStatus) recordingStatus.textContent = 'Camera recording stopped.';
+            recordButton.setAttribute('aria-pressed', 'false');
+            clearRecordingLock();
+        }
+
+        function cleanupCameraRecordingArtifacts() {
+            try {
+                cameraRecordingActive = false;
+                if (cameraDrawRequestId) {
+                    cancelAnimationFrame(cameraDrawRequestId);
+                    cameraDrawRequestId = null;
+                }
+            } catch (e) {}
+
+            try {
+                if (cameraCanvasStream) {
+                    cameraCanvasStream.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {}
+
+            cameraCanvasStream = null;
+            cameraRecordingCtx = null;
+            cameraRecordingCanvas = null;
+
+            try {
+                if (cameraAudioGainNode) {
+                    cameraAudioGainNode.disconnect();
+                }
+                if (cameraAudioSourceNode) {
+                    cameraAudioSourceNode.disconnect();
+                }
+            } catch (e) {}
+            try {
+                if (cameraAudioDest) {
+                    cameraAudioDest.disconnect && cameraAudioDest.disconnect();
+                }
+            } catch (e) {}
+            try {
+                if (cameraAudioContext && cameraAudioContext.state !== 'closed') {
+                    cameraAudioContext.close();
+                }
+            } catch (e) {}
+
+            cameraAudioContext = null;
+            cameraAudioGainNode = null;
+            cameraAudioSourceNode = null;
+            cameraAudioDest = null;
+        }
+
+        async function injectNotificationHider() {
+            // Create a style element if it doesn't exist
+            let styleEl = document.getElementById('notification-hider');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'notification-hider';
+                document.head.appendChild(styleEl);
+            }
+
+            // Add aggressive CSS
+            styleEl.textContent = `
+                div[style*="position: fixed"],
+                div[style*="bottom:"],
+                div[style*="z-index"],
+                div[role="status"],
+                div[role="alert"],
+                div[aria-live],
+                div[class*="sharing"],
+                div[class*="notification"],
+                div[class*="toast"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    position: fixed !important;
+                    bottom: -9999px !important;
+                    pointer-events: none !important;
+                }
+            `;
+        }
+
+        function aggressiveHideNotifications() {
+            // Hide by common attributes
+            const selectors = [
+                '[role="status"]:not(.pip-video):not(.pip-container)',
+                '[role="alert"]:not(.pip-video):not(.pip-container)',
+                '[aria-live]:not(.pip-video):not(.pip-container)',
+                'div[style*="position: fixed"]:not(.pip-video):not(.pip-container)',
+                'div[style*="bottom:"]:not(.pip-video):not(.pip-container)',
+                'div[class*="sharing"]:not(.pip-video):not(.pip-container)',
+                'div[class*="notification"]:not(.pip-video):not(.pip-container)',
+                'div[class*="toast"]:not(.pip-video):not(.pip-container)'
+            ];
+
+            selectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    // Skip PIP elements
+                    if (el.classList.contains('pip-video') || el.classList.contains('pip-container')) {
+                        return;
+                    }
+                    
+                    el.style.cssText = `
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                        position: fixed !important;
+                        bottom: -9999px !important;
+                        pointer-events: none !important;
+                        height: 0 !important;
+                        width: 0 !important;
+                        margin: -1px !important;
+                        padding: 0 !important;
+                        border: 0 !important;
+                        clip: rect(0 0 0 0) !important;
+                    `;
+                });
+            });
+
+            // Hide by computed style
+            document.querySelectorAll('div').forEach(el => {
+                // Skip PIP elements
+                if (el.classList.contains('pip-video') || el.classList.contains('pip-container')) {
+                    return;
+                }
+
+                const style = window.getComputedStyle(el);
+                if (style.position === 'fixed' && 
+                    (parseInt(style.bottom) >= 0 || style.bottom === '0px' || style.bottom === 'auto')) {
+                    el.style.cssText = `
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                        position: fixed !important;
+                        bottom: -9999px !important;
+                        pointer-events: none !important;
+                    `;
+                }
+            });
+        }
+
+        function hideShareNotification() {
+            // Function to recursively search for and hide elements containing the text
+            function findAndHideElement(node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    // Check if text node contains our target text
+                    if (node.textContent.toLowerCase().includes('techlabcl.nl is sharing')) {
+                        // Get the parent element that contains this text
+                        let parent = node.parentElement;
+                        while (parent && parent.tagName !== 'BODY') {
+                            // Hide the entire notification container
+                            parent.style.cssText = `
+                                display: none !important;
+                                visibility: hidden !important;
+                                opacity: 0 !important;
+                                position: fixed !important;
+                                bottom: -9999px !important;
+                                pointer-events: none !important;
+                                height: 0 !important;
+                                width: 0 !important;
+                            `;
+                            parent = parent.parentElement;
+                        }
+                    }
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    // Recursively search child nodes
+                    node.childNodes.forEach(findAndHideElement);
+                }
+            }
+
+            // Start the search from the document body
+            findAndHideElement(document.body);
+        }
+
+        function createIsolatedContainer(targetRect = null) {
+            // Create an iframe to isolate the video.
+            // If targetRect is provided, we render the preview into the same
+            // viewport area as the camera video to avoid full-screen stacking.
+            const iframe = document.createElement('iframe');
+            const top = targetRect ? `${targetRect.top}px` : '0';
+            const left = targetRect ? `${targetRect.left}px` : '0';
+            const width = targetRect ? `${targetRect.width}px` : '100%';
+            const height = targetRect ? `${targetRect.height}px` : '100%';
+
+            iframe.style.cssText = `
+                position: fixed;
+                top: ${top};
+                left: ${left};
+                width: ${width};
+                height: ${height};
+                border: none;
+                z-index: 999999;
+                background: transparent;
+                overflow: hidden;
+                pointer-events: none;
+            `;
+            document.body.appendChild(iframe);
+            
+            // Get the iframe's document
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            
+            // Create a container for the video
+            const container = iframeDoc.createElement('div');
+            container.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: transparent;
+            `;
+            iframeDoc.body.appendChild(container);
+            
+            return { iframe, container };
+        }
+
+        function setupNotificationHider() {
+            // Previous mutation observer code
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                hideElement(node);
+                                // Also check shadow DOM
+                                if (node.shadowRoot) {
+                                    hideElement(node.shadowRoot);
+                                    const shadowObserver = new MutationObserver((shadowMutations) => {
+                                        shadowMutations.forEach(m => {
+                                            m.addedNodes.forEach(n => hideElement(n));
+                                        });
+                                    });
+                                    shadowObserver.observe(node.shadowRoot, {
+                                        childList: true,
+                                        subtree: true,
+                                        attributes: true
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Observe both document and any shadow roots
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true,
+                attributes: true
+            });
+
+            // Also try to find and observe any existing shadow roots
+            document.querySelectorAll('*').forEach(el => {
+                if (el.shadowRoot) {
+                    observer.observe(el.shadowRoot, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true
+                    });
+                }
+            });
+
+            return observer;
+        }
+
+        function hideElement(element) {
+            if (element.nodeType !== Node.ELEMENT_NODE) return;
+            // Never hide the user's PiP/corner preview.
+            if (element.classList && (element.classList.contains('pip-video') || element.classList.contains('pip-container'))) {
+                return;
+            }
+
+            const style = window.getComputedStyle(element);
+            const text = (element.textContent || '').toLowerCase();
+            const className = (element.className || '').toLowerCase();
+            const id = (element.id || '').toLowerCase();
+            
+            // Check for sharing indicators including Edge-specific patterns
+            if ((text.includes('sharing') || 
+                 text.includes('techlabcl.nl') ||
+                 text.includes('screen') ||
+                 text.includes('recording') ||
+                 text.includes('is sharing your') ||  // Edge-specific text
+                 text.includes('wants to share') ||   // Edge-specific text
+                 className.includes('edge-') ||
+                 className.includes('ms-') ||
+                 className.includes('microsoftedge') ||
+                 id.includes('edge-') ||
+                 id.includes('sharing')) &&
+                (style.position === 'fixed' || 
+                 className.includes('notification') ||
+                 className.includes('sharing') ||
+                 className.includes('toast') ||
+                 className.includes('banner') ||
+                 className.includes('informationbar') ||
+                 className.includes('statusmessage') ||
+                 element.getAttribute('role') === 'status' ||
+                 element.getAttribute('role') === 'alert' ||
+                 element.getAttribute('aria-live') === 'polite' ||
+                 element.getAttribute('aria-live') === 'assertive')) {
+                
+                // Force hide using multiple techniques including Edge-specific ones
+                element.style.cssText = `
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    position: fixed !important;
+                    z-index: -999999 !important;
+                    height: 0 !important;
+                    width: 0 !important;
+                    min-height: 0 !important;
+                    min-width: 0 !important;
+                    max-height: 0 !important;
+                    max-width: 0 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    border: 0 !important;
+                    clip: rect(0, 0, 0, 0) !important;
+                    pointer-events: none !important;
+                    transform: translateY(-9999px) scale(0) !important;
+                    filter: opacity(0) !important;
+                    -ms-high-contrast-adjust: none !important;  /* Edge-specific */
+                    -ms-transform: translateY(-9999px) !important;  /* Edge-specific */
+                `;
+                
+                // Try multiple ways to remove/hide the element
+                try {
+                    element.remove();
+                } catch (e) {
+                    try {
+                        element.parentNode.removeChild(element);
+                    } catch (e2) {
+                        element.innerHTML = '';
+                        element.setAttribute('aria-hidden', 'true');
+                        element.setAttribute('hidden', 'true');
+                        // Edge-specific attributes
+                        element.setAttribute('data-ms-hide', 'true');
+                        element.setAttribute('data-edge-hidden', 'true');
+                    }
+                }
+            }
+
+            // Recursively check all children
+            Array.from(element.children).forEach(hideElement);
+        }
+
+        // Add Edge-specific CSS
+        function injectEdgeNotificationCSS() {
+            const style = document.createElement('style');
+            style.textContent = 
+                'div[role="status"],' +
+                'div[role="alert"],' +
+                'div[class*="notification"],' +
+                'div[class*="toast"],' +
+                'div[class*="banner"],' +
+                'div[class*="sharing"],' +
+                'div[style*="fixed"],' +
+                'div[style*="notification"],' +
+                'div[aria-live="polite"],' +
+                'div[aria-live="assertive"],' +
+                'div[class*="edge-notification"],' +
+                'div[class*="ms-"],' +
+                'div[class*="microsoftEdge"],' +
+                'div[class*="edge-sharing"],' +
+                'div[class*="edge-toast"],' +
+                'div[id*="edge-notification"],' +
+                'div[id*="sharing-indicator"],' +
+                '.toast-container,' +
+                '.notification-container,' +
+                '[class*="InformationBar"],' +
+                '[class*="StatusMessage"],' +
+                '[class*="PermissionPrompt"],' +
+                '[class*="EdgeUI"] {' +
+                '    display: none !important;' +
+                '    visibility: hidden !important;' +
+                '    opacity: 0 !important;' +
+                '    position: absolute !important;' +
+                '    clip: rect(0, 0, 0, 0) !important;' +
+                '    pointer-events: none !important;' +
+                '    max-height: 0 !important;' +
+                '    max-width: 0 !important;' +
+                '    transform: translateY(-9999px) !important;' +
+                '}';
+            document.head.appendChild(style);
+        }
+
+        async function startScreenRecording() {
+            try {
+                if (screenCaptureStarting) return;
+                screenCaptureStarting = true;
+                toggleScreenRecordingButton.disabled = true;
+
+                // Inject Edge-specific CSS
+                injectEdgeNotificationCSS();
+
+                // Create isolated container
+                if (window.isolatedContainer && window.isolatedContainer.iframe) {
+                    try { window.isolatedContainer.iframe.remove(); } catch (e) {}
+                    window.isolatedContainer = null;
+                }
+                // Create isolated container (same size as camera preview)
+                const rect = video.getBoundingClientRect();
+                const targetRect = (rect && rect.width > 0 && rect.height > 0) ? rect : null;
+                const { iframe, container } = createIsolatedContainer(targetRect);
+                window.isolatedContainer = { iframe, container };
+
+                // Setup notification hiding
+                const observer = setupNotificationHider();
+                window.notificationObserver = observer;
+
+                // Get screen capture stream
+                screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        displaySurface: "monitor",
+                        logicalSurface: true,
+                        cursor: "always",
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30, max: 60 }
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 48000,
+                        suppressLocalAudioPlayback: false
+                    },
+                    systemAudio: "include"
+                });
+
+                // Move video to isolated container
+                const screenPreviewVideo = document.createElement('video');
+                screenPreviewVideo.srcObject = screenStream;
+                screenPreviewVideo.autoplay = true;
+                screenPreviewVideo.playsInline = true;
+                screenPreviewVideo.style.width = '100%';
+                screenPreviewVideo.style.height = '100%';
+                screenPreviewVideo.style.objectFit = 'cover';
+                container.appendChild(screenPreviewVideo);
+
+                // Additional hiding attempts after getDisplayMedia
+                setTimeout(aggressiveHideNotifications, 0);
+                setTimeout(aggressiveHideNotifications, 100);
+                setTimeout(aggressiveHideNotifications, 500);
+                setTimeout(aggressiveHideNotifications, 1000);
+
+                screenPreviewVideoEl = screenPreviewVideo;
+
+                // Canvas mirroring so Mirror updates the RECORDED output instantly.
+                const screenVideoTrack = screenStream.getVideoTracks()[0];
+                const screenSettings = (screenVideoTrack && screenVideoTrack.getSettings) ? screenVideoTrack.getSettings() : {};
+                const w = Math.max(1, Math.floor(screenSettings.width || 1920));
+                const h = Math.max(1, Math.floor(screenSettings.height || 1080));
+
+                screenRecordingCanvas = document.createElement('canvas');
+                screenRecordingCanvas.width = w;
+                screenRecordingCanvas.height = h;
+                screenRecordingCtx = screenRecordingCanvas.getContext('2d');
+
+                const fps = 30;
+                screenCanvasStream = screenRecordingCanvas.captureStream(fps);
+                const canvasVideoTrack = screenCanvasStream.getVideoTracks()[0];
+
+                // Always include audio; the Mute button will control gain during active recording.
+                const audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        deviceId: currentMicDeviceId || undefined,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000,
+                        sampleSize: 16
+                    }
+                });
+                screenMicAudioStream = audioStream;
+
+                // Route both system-audio (screenStream) + mic audio (audioStream) through one GainNode.
+                const allAudioTracks = [
+                    ...screenStream.getAudioTracks(),
+                    ...audioStream.getAudioTracks()
+                ];
+
+                let composedStreamTracks = [canvasVideoTrack];
+                if (allAudioTracks.length > 0) {
+                    screenAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    screenAudioGainNode = screenAudioContext.createGain();
+                    screenAudioGainNode.gain.value = isMutedVideoAudio ? 0 : 1;
+
+                    const audioOnlyStream = new MediaStream(allAudioTracks);
+                    const source = screenAudioContext.createMediaStreamSource(audioOnlyStream);
+                    screenAudioDest = screenAudioContext.createMediaStreamDestination();
+
+                    source.connect(screenAudioGainNode);
+                    screenAudioGainNode.connect(screenAudioDest);
+
+                    composedStreamTracks = [
+                        canvasVideoTrack,
+                        ...screenAudioDest.stream.getAudioTracks()
+                    ];
+                }
+
+                const composedStream = new MediaStream(composedStreamTracks);
+                const options = {
+                    mimeType: 'video/webm;codecs=vp9,opus',
+                    videoBitsPerSecond: 12000000, // 12 Mbps for screen recording
+                    audioBitsPerSecond: 128000    // 128 kbps
+                };
+
+                // Fallback if VP9 is not supported
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm;codecs=vp8,opus';
+                }
+
+                screenMediaRecorder = new MediaRecorder(composedStream, options);
+
+                screenRecordedChunks = [];
+
+                screenMediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        screenRecordedChunks.push(event.data);
+                    }
+                };
+
+                screenMediaRecorder.onstop = () => {
+                    const blob = new Blob(screenRecordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = getTimestamp() + 'screen.webm';
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                    cleanupScreenRecordingArtifacts();
+                };
+
+                screenRecordingActive = true;
+                const drawFrame = () => {
+                    if (!screenRecordingActive || !screenRecordingCtx) return;
+                    screenRecordingCtx.clearRect(0, 0, w, h);
+                    if (mirrorFeed) {
+                        screenRecordingCtx.save();
+                        screenRecordingCtx.translate(w, 0);
+                        screenRecordingCtx.scale(-1, 1);
+                        screenRecordingCtx.drawImage(screenPreviewVideo, 0, 0, w, h);
+                        screenRecordingCtx.restore();
+                    } else {
+                        screenRecordingCtx.drawImage(screenPreviewVideo, 0, 0, w, h);
+                    }
+                    screenDrawRequestId = requestAnimationFrame(drawFrame);
+                };
+                screenDrawRequestId = requestAnimationFrame(drawFrame);
+
+                screenMediaRecorder.start();
+                toggleScreenRecordingButton.textContent = 'Stop Screen Capture';
+                toggleScreenRecordingButton.classList.add('recording');
+                if (recordingStatus) recordingStatus.textContent = 'Screen capture recording started.';
+                toggleScreenRecordingButton.setAttribute('aria-pressed', 'true');
+                setRecordingLock(toggleScreenRecordingButton);
+                screenCaptureStarting = false;
+                toggleScreenRecordingButton.disabled = false;
+
+                // Hide sharing notification with multiple attempts
+                hideShareNotification();
+                setTimeout(hideShareNotification, 100);
+                setTimeout(hideShareNotification, 500);
+                setTimeout(hideShareNotification, 1000);
+
+                // Create an interval to keep checking for the notification
+                const screenHideInterval = setInterval(hideShareNotification, 250);
+                window.hideShareInterval = screenHideInterval;
+
+                // Stop checking when screen share ends
+                screenStream.getVideoTracks()[0].addEventListener('ended', () => {
+                    if (window.hideShareInterval) {
+                        clearInterval(window.hideShareInterval);
+                        window.hideShareInterval = null;
+                    }
+                    stopScreenRecordingExternally();
+                }, { once: true });
+            } catch (err) {
+                console.error("Error starting screen recording: " + err);
+                screenCaptureStarting = false;
+                toggleScreenRecordingButton.disabled = false;
+                if (window.notificationObserver) {
+                    window.notificationObserver.disconnect();
+                }
+                if (window.isolatedContainer) {
+                    window.isolatedContainer.iframe.remove();
+                }
+            }
+        }
+
+        function stopScreenRecordingExternally() {
+            screenCaptureStarting = false;
+            toggleScreenRecordingButton.disabled = false;
+            // Stop canvas animation immediately; MediaRecorder will finalize asynchronously.
+            screenRecordingActive = false;
+            if (screenDrawRequestId) {
+                cancelAnimationFrame(screenDrawRequestId);
+                screenDrawRequestId = null;
+            }
+            if (window.notificationObserver) {
+                window.notificationObserver.disconnect();
+                window.notificationObserver = null;
+            }
+            if (window.hideShareInterval) {
+                clearInterval(window.hideShareInterval);
+                window.hideShareInterval = null;
+            }
+            if (window.isolatedContainer) {
+                window.isolatedContainer.iframe.remove();
+            }
+            const wasRecording = screenMediaRecorder && screenMediaRecorder.state === 'recording';
+            if (wasRecording) {
+                screenMediaRecorder.stop();
+            }
+            toggleScreenRecordingButton.textContent = 'Start Screen Capture';
+            toggleScreenRecordingButton.classList.remove('recording');
+            if (recordingStatus) recordingStatus.textContent = 'Screen capture recording stopped.';
+            toggleScreenRecordingButton.setAttribute('aria-pressed', 'false');
+            clearRecordingLock();
+            if (screenStream) {
+                screenStream.getTracks().forEach(track => track.stop());
+                screenStream = null;
+            }
+            if (!wasRecording) {
+                cleanupScreenRecordingArtifacts();
+            }
+        }
+
+        function cleanupScreenRecordingArtifacts() {
+            try {
+                screenRecordingActive = false;
+                if (screenDrawRequestId) {
+                    cancelAnimationFrame(screenDrawRequestId);
+                    screenDrawRequestId = null;
+                }
+            } catch (e) {}
+
+            try {
+                if (screenCanvasStream) {
+                    screenCanvasStream.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {}
+
+            screenCanvasStream = null;
+            screenRecordingCtx = null;
+            screenRecordingCanvas = null;
+
+            try {
+                if (screenMicAudioStream) {
+                    screenMicAudioStream.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {}
+            screenMicAudioStream = null;
+
+            try {
+                if (screenAudioGainNode) {
+                    screenAudioGainNode.disconnect();
+                }
+            } catch (e) {}
+
+            try {
+                if (screenAudioDest && screenAudioDest.disconnect) {
+                    screenAudioDest.disconnect();
+                }
+            } catch (e) {}
+
+            try {
+                if (screenAudioContext && screenAudioContext.state !== 'closed') {
+                    screenAudioContext.close();
+                }
+            } catch (e) {}
+
+            screenAudioContext = null;
+            screenAudioGainNode = null;
+            screenAudioDest = null;
+            screenPreviewVideoEl = null;
+        }
+
+        function startAudioRecording() {
+            const audioConstraints = currentMicDeviceId
+                ? { deviceId: currentMicDeviceId }
+                : true;
+
+            navigator.mediaDevices.getUserMedia({ audio: audioConstraints })
+                .then(stream => {
+                    audioRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    audioRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    audioRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const url = URL.createObjectURL(blob);
+
+                        if (!suppressAudioDownload) {
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = getTimestamp() + 'audio.webm';
+                            document.body.appendChild(a);
+                            a.click();
+                        }
+
+                        suppressAudioDownload = false;
+                        URL.revokeObjectURL(url);
+                    };
+                    audioRecorder.start();
+                    toggleAudioRecordingButton.textContent = 'Stop Audio Recording';
+                    toggleAudioRecordingButton.classList.add('recording');
+                    if (recordingStatus) recordingStatus.textContent = 'Audio recording started.';
+                    toggleAudioRecordingButton.setAttribute('aria-pressed', 'true');
+                    setRecordingLock(toggleAudioRecordingButton);
+                })
+                .catch(err => {
+                    console.error("Error starting audio recording: " + err);
+                });
+        }
+
+        function stopAudioRecording() {
+            if (audioRecorder && audioRecorder.state === 'recording') {
+                audioRecorder.stop();
+            }
+            toggleAudioRecordingButton.textContent = 'Start Audio Recording';
+            toggleAudioRecordingButton.classList.remove('recording');
+            if (recordingStatus) recordingStatus.textContent = 'Audio recording stopped.';
+            toggleAudioRecordingButton.setAttribute('aria-pressed', 'false');
+            clearRecordingLock();
+        }
+
+        function takePhoto() {
+            if (currentStream) {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                if (mirrorFeed) {
+                    // Apply mirroring effect
+                    context.translate(canvas.width, 0);
+                    context.scale(-1, 1);
+                }
+
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // If we applied mirroring, reset the transform for future operations
+                if (mirrorFeed) {
+                    context.setTransform(1, 0, 0, 1, 0, 0);
+                }
+
+                canvas.toBlob((blob) => {
+                    if (!blob) return;
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = getTimestamp() + 'photo.png';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            }
+        }
+
+        async function startStreamCapture() {
+            try {
+                // During stream capture, keep the corner camera preview non-mirrored
+                // and prevent changing the mirror state mid-session.
+                if (mirrorToggleButton) mirrorToggleButton.disabled = true;
+
+                // Setup notification hiding before starting screen capture
+                const observer = setupNotificationHider();
+                window.streamNotificationObserver = observer;
+
+                screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        displaySurface: "monitor",
+                        logicalSurface: true,
+                        cursor: "always",
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30, max: 60 }
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 48000,
+                        suppressLocalAudioPlayback: false
+                    },
+                    systemAudio: "include"
+                });
+
+                // Get camera stream for PIP
+                const cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        deviceId: currentCameraDeviceId,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 30 },
+                        aspectRatio: { ideal: 16/9 }
+                    },
+                    audio: false
+                });
+                streamCaptureCameraStream = cameraStream;
+
+                // Create camera video element for the on-screen PiP/corner preview.
+                // (This is what the user sees while minimizing/switching apps.)
+                const cameraVideoPip = document.createElement('video');
+                cameraVideoPip.srcObject = cameraStream;
+                cameraVideoPip.autoplay = true;
+                cameraVideoPip.muted = true;
+                cameraVideoPip.playsInline = true;
+                // Keep PiP preview non-mirrored (matches original behavior).
+                cameraVideoPip.style.transform = 'scaleX(1)';
+                // Hide in-page element; browser PiP handles the visible corner overlay.
+                // (Avoids the big black in-page box covering the UI.)
+                cameraVideoPip.style.position = 'fixed';
+                cameraVideoPip.style.left = '-10000px';
+                cameraVideoPip.style.top = '-10000px';
+                cameraVideoPip.style.width = '1px';
+                cameraVideoPip.style.height = '1px';
+                cameraVideoPip.style.opacity = '0';
+                cameraVideoPip.style.pointerEvents = 'none';
+                streamCaptureCameraVideoEl = cameraVideoPip;
+                document.body.appendChild(cameraVideoPip);
+                await cameraVideoPip.play();
+
+                // Create a separate draw source for canvas compositing.
+                // This avoids relying on PiP playback behavior in backgrounded tabs.
+                const cameraVideoDraw = document.createElement('video');
+                cameraVideoDraw.srcObject = cameraStream;
+                cameraVideoDraw.autoplay = true;
+                cameraVideoDraw.muted = true;
+                cameraVideoDraw.playsInline = true;
+                cameraVideoDraw.style.position = 'fixed';
+                cameraVideoDraw.style.left = '-10000px';
+                cameraVideoDraw.style.top = '-10000px';
+                cameraVideoDraw.style.width = '1px';
+                cameraVideoDraw.style.height = '1px';
+                cameraVideoDraw.style.opacity = '0';
+                cameraVideoDraw.style.pointerEvents = 'none';
+                streamCaptureCameraDrawVideoEl = cameraVideoDraw;
+                document.body.appendChild(cameraVideoDraw);
+                await cameraVideoDraw.play();
+
+                // Keep preview visible when the browser is backgrounded.
+                try {
+                    if (document.pictureInPictureEnabled) {
+                        await cameraVideoPip.requestPictureInPicture();
+                        cameraVideoPip.addEventListener('leavepictureinpicture', () => {
+                            try { cameraStream.getTracks().forEach(track => track.stop()); } catch (e) {}
+                            if (streamCaptureRecorder && streamCaptureRecorder.state === 'recording') {
+                                stopStreamCapture();
+                            }
+                        }, { once: true });
+                    }
+                } catch (e) {
+                    // If PiP fails, we keep the in-page element hidden and continue
+                    // recording anyway. (Browser PiP is required for the corner preview.)
+                }
+
+                // Canvas mirroring for the RECORDED stream.
+                // We mirror the screen pixels (including the PiP window) at draw-time so the RECORDED output updates immediately.
+                const streamScreenVideoTrack = screenStream.getVideoTracks()[0];
+                const streamScreenSettings = (streamScreenVideoTrack && streamScreenVideoTrack.getSettings)
+                    ? streamScreenVideoTrack.getSettings()
+                    : {};
+                const sw = Math.max(1, Math.floor(streamScreenSettings.width || 1920));
+                const sh = Math.max(1, Math.floor(streamScreenSettings.height || 1080));
+
+                streamRecordingCanvas = document.createElement('canvas');
+                streamRecordingCanvas.width = sw;
+                streamRecordingCanvas.height = sh;
+                streamRecordingCtx = streamRecordingCanvas.getContext('2d');
+
+                const fps = 30;
+                streamCanvasStream = streamRecordingCanvas.captureStream(fps);
+                const canvasVideoTrack = streamCanvasStream.getVideoTracks()[0];
+
+                streamCaptureScreenVideoEl = document.createElement('video');
+                streamCaptureScreenVideoEl.srcObject = screenStream;
+                streamCaptureScreenVideoEl.autoplay = true;
+                streamCaptureScreenVideoEl.playsInline = true;
+                streamCaptureScreenVideoEl.muted = true;
+                streamCaptureScreenVideoEl.style.display = 'none';
+                document.body.appendChild(streamCaptureScreenVideoEl);
+                await streamCaptureScreenVideoEl.play();
+
+                streamRecordingActive = true;
+                const drawFrame = () => {
+                    if (!streamRecordingActive || !streamRecordingCtx) return;
+                    streamRecordingCtx.clearRect(0, 0, sw, sh);
+
+                    // Base layer: screen capture.
+                    streamRecordingCtx.drawImage(streamCaptureScreenVideoEl, 0, 0, sw, sh);
+
+                    // Overlay layer: camera preview in the corner.
+                    // This guarantees the overlay is included in the RECORDED output
+                    // even when the browser doesn't capture DOM overlays consistently.
+                    const camSrc = streamCaptureCameraDrawVideoEl || streamCaptureCameraVideoEl;
+                    if (camSrc) {
+                        const pad = Math.max(8, Math.floor(sw * 0.01));
+                        const overlayW = Math.max(160, Math.floor(sw * 0.25));
+                        const overlayH = Math.max(90, Math.floor(overlayW * 9 / 16));
+                        const dx = sw - overlayW - pad;
+                        const dy = sh - overlayH - pad;
+
+                        // Draw "cover" so the overlay fills nicely.
+                        const srcW = camSrc.videoWidth || overlayW;
+                        const srcH = camSrc.videoHeight || overlayH;
+                        const srcAspect = srcW / srcH;
+                        const dstAspect = overlayW / overlayH;
+
+                        let sx = 0, sy = 0, swSrc = srcW, shSrc = srcH;
+                        if (srcAspect > dstAspect) {
+                            // Wider than target: crop left/right
+                            shSrc = srcH;
+                            swSrc = shSrc * dstAspect;
+                            sx = (srcW - swSrc) / 2;
+                        } else {
+                            // Taller than target: crop top/bottom
+                            swSrc = srcW;
+                            shSrc = swSrc / dstAspect;
+                            sy = (srcH - shSrc) / 2;
+                        }
+
+                        streamRecordingCtx.save();
+                        if (mirrorFeed) {
+                            streamRecordingCtx.translate(dx + overlayW, dy);
+                            streamRecordingCtx.scale(-1, 1);
+                            // drawImage dst x is mirrored around 0..overlayW
+                            streamRecordingCtx.drawImage(
+                                    camSrc,
+                                sx, sy, swSrc, shSrc,
+                                0, 0, overlayW, overlayH
+                            );
+                        } else {
+                            streamRecordingCtx.drawImage(
+                                    camSrc,
+                                sx, sy, swSrc, shSrc,
+                                dx, dy, overlayW, overlayH
+                            );
+                        }
+                        streamRecordingCtx.restore();
+
+                        // No separate overlay-canvas painting needed now; the user-visible preview
+                        // is the PiP/corner video itself (cameraVideoPip).
+                    }
+                    streamDrawRequestId = requestAnimationFrame(drawFrame);
+                };
+                streamDrawRequestId = requestAnimationFrame(drawFrame);
+
+                // Always include audio; the Mute button will control gain during active recording.
+                const audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: { deviceId: currentMicDeviceId || undefined }
+                });
+                streamCaptureMicAudioStream = audioStream;
+
+                // Combine: keep screen video, route all audio through GainNode.
+                const allAudioTracks = [
+                    ...screenStream.getAudioTracks(),
+                    ...audioStream.getAudioTracks()
+                ];
+
+                let composedStreamTracks = [canvasVideoTrack];
+                if (allAudioTracks.length > 0) {
+                    streamCaptureAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    streamCaptureAudioGainNode = streamCaptureAudioContext.createGain();
+                    streamCaptureAudioGainNode.gain.value = isMutedVideoAudio ? 0 : 1;
+
+                    const audioOnlyStream = new MediaStream(allAudioTracks);
+                    const source = streamCaptureAudioContext.createMediaStreamSource(audioOnlyStream);
+                    streamCaptureAudioDest = streamCaptureAudioContext.createMediaStreamDestination();
+
+                    source.connect(streamCaptureAudioGainNode);
+                    streamCaptureAudioGainNode.connect(streamCaptureAudioDest);
+
+                    composedStreamTracks = [
+                        canvasVideoTrack,
+                        ...streamCaptureAudioDest.stream.getAudioTracks()
+                    ];
+                }
+
+                const composedStream = new MediaStream(composedStreamTracks);
+
+                // Set up recording with high quality
+                const options = {
+                    mimeType: 'video/webm;codecs=vp9,opus',
+                    videoBitsPerSecond: 12000000,
+                    audioBitsPerSecond: 256000
+                };
+
+                // Fallback if VP9 is not supported
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'video/webm;codecs=vp8,opus';
+                }
+
+                streamCaptureRecorder = new MediaRecorder(composedStream, options);
+                streamCaptureChunks = [];
+
+                streamCaptureRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        streamCaptureChunks.push(event.data);
+                    }
+                };
+
+                streamCaptureRecorder.onstop = () => {
+                    const blob = new Blob(streamCaptureChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = getTimestamp() + 'stream.webm';
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                    // Exit PiP if still active
+                    if (document.pictureInPictureElement) {
+                        document.exitPictureInPicture();
+                    }
+
+                    cleanupStreamCaptureArtifacts();
+                };
+
+                // Handle screen share stop
+                screenStream.getVideoTracks()[0].addEventListener('ended', () => {
+                    stopStreamCapture();
+                });
+
+                streamCaptureRecorder.start();
+                toggleStreamCaptureButton.textContent = 'Stop Stream Capture';
+                toggleStreamCaptureButton.classList.add('recording');
+                if (recordingStatus) recordingStatus.textContent = 'Stream capture recording started.';
+                toggleStreamCaptureButton.setAttribute('aria-pressed', 'true');
+                setRecordingLock(toggleStreamCaptureButton);
+                toggleStreamCaptureButton.setAttribute('aria-pressed', 'true');
+
+                // Hide sharing notification with multiple attempts
+                hideShareNotification();
+                setTimeout(hideShareNotification, 100);
+                setTimeout(hideShareNotification, 500);
+                setTimeout(hideShareNotification, 1000);
+                
+                // Create an interval to keep checking for the notification
+                const streamHideInterval = setInterval(hideShareNotification, 250);
+                window.streamHideShareInterval = streamHideInterval;
+
+                // Stop checking when screen share ends
+                screenStream.getVideoTracks()[0].addEventListener('ended', () => {
+                    if (window.streamHideShareInterval) {
+                        clearInterval(window.streamHideShareInterval);
+                        window.streamHideShareInterval = null;
+                    }
+                    stopStreamCapture();
+                }, { once: true });
+            } catch (err) {
+                console.error("Error starting stream capture: " + err);
+                if (mirrorToggleButton) mirrorToggleButton.disabled = false;
+                if (window.streamNotificationObserver) {
+                    window.streamNotificationObserver.disconnect();
+                }
+                if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture();
+                }
+            }
+        }
+
+        function stopStreamCapture() {
+            if (window.streamNotificationObserver) {
+                window.streamNotificationObserver.disconnect();
+                window.streamNotificationObserver = null;
+            }
+            if (window.streamHideShareInterval) {
+                clearInterval(window.streamHideShareInterval);
+                window.streamHideShareInterval = null;
+            }
+            const wasRecording = streamCaptureRecorder && streamCaptureRecorder.state === 'recording';
+            // Stop canvas drawing immediately; MediaRecorder will finalize asynchronously.
+            streamRecordingActive = false;
+            if (streamDrawRequestId) {
+                cancelAnimationFrame(streamDrawRequestId);
+                streamDrawRequestId = null;
+            }
+            if (wasRecording) {
+                streamCaptureRecorder.stop();
+            }
+            toggleStreamCaptureButton.textContent = 'Start Stream Capture';
+            toggleStreamCaptureButton.classList.remove('recording');
+            if (recordingStatus) recordingStatus.textContent = 'Stream capture recording stopped.';
+            toggleStreamCaptureButton.setAttribute('aria-pressed', 'false');
+            clearRecordingLock();
+
+            // Exit PiP if still active
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture();
+            }
+
+            // Stop screen capture stream
+            if (screenStream) {
+                screenStream.getTracks().forEach(track => track.stop());
+                screenStream = null;
+            }
+
+            // Stop and remove camera overlay (reliable replacement for browser PiP).
+            try {
+                if (streamCaptureCameraStream) {
+                    streamCaptureCameraStream.getTracks().forEach(track => track.stop());
+                    streamCaptureCameraStream = null;
+                }
+            } catch (e) {}
+
+            try {
+                if (streamCaptureCameraVideoEl) {
+                    try { streamCaptureCameraVideoEl.pause(); } catch (e) {}
+                    try { streamCaptureCameraVideoEl.srcObject = null; } catch (e) {}
+                    try { streamCaptureCameraVideoEl.remove(); } catch (e) {}
+                }
+            } catch (e) {}
+
+            try {
+                if (streamCaptureCameraOverlayCanvas) {
+                    try { streamCaptureCameraOverlayCanvas.remove(); } catch (e) {}
+                }
+            } catch (e) {}
+            streamCaptureCameraOverlayCanvas = null;
+            streamCaptureCameraOverlayCtx = null;
+
+            if (!wasRecording) {
+                cleanupStreamCaptureArtifacts();
+            }
+            streamCaptureCameraVideoEl = null;
+            streamCaptureCameraDrawVideoEl = null;
+
+            // Re-enable mirror control after stream capture ends.
+            if (mirrorToggleButton) mirrorToggleButton.disabled = false;
+        }
+
+        function cleanupStreamCaptureArtifacts() {
+            try {
+                streamRecordingActive = false;
+                if (streamDrawRequestId) {
+                    cancelAnimationFrame(streamDrawRequestId);
+                    streamDrawRequestId = null;
+                }
+            } catch (e) {}
+
+            try {
+                if (streamCanvasStream) {
+                    streamCanvasStream.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {}
+
+            streamCanvasStream = null;
+            streamRecordingCtx = null;
+            streamRecordingCanvas = null;
+
+            try {
+                if (streamCaptureScreenVideoEl) {
+                    try { streamCaptureScreenVideoEl.pause(); } catch (e) {}
+                    try { streamCaptureScreenVideoEl.srcObject = null; } catch (e) {}
+                    try { streamCaptureScreenVideoEl.remove(); } catch (e) {}
+                }
+            } catch (e) {}
+            streamCaptureScreenVideoEl = null;
+
+            // Stop and remove camera overlay (in case cleanup runs without stopStreamCapture()).
+            try {
+                if (streamCaptureCameraStream) {
+                    streamCaptureCameraStream.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {}
+            streamCaptureCameraStream = null;
+
+            try {
+                if (streamCaptureCameraVideoEl) {
+                    try { streamCaptureCameraVideoEl.pause(); } catch (e) {}
+                    try { streamCaptureCameraVideoEl.srcObject = null; } catch (e) {}
+                    try { streamCaptureCameraVideoEl.remove(); } catch (e) {}
+                }
+            } catch (e) {}
+            streamCaptureCameraVideoEl = null;
+
+            try {
+                if (streamCaptureCameraDrawVideoEl) {
+                    try { streamCaptureCameraDrawVideoEl.pause(); } catch (e) {}
+                    try { streamCaptureCameraDrawVideoEl.srcObject = null; } catch (e) {}
+                    try { streamCaptureCameraDrawVideoEl.remove(); } catch (e) {}
+                }
+            } catch (e) {}
+            streamCaptureCameraDrawVideoEl = null;
+
+            try {
+                if (streamCaptureCameraOverlayCanvas) {
+                    try { streamCaptureCameraOverlayCanvas.remove(); } catch (e) {}
+                }
+            } catch (e) {}
+            streamCaptureCameraOverlayCanvas = null;
+            streamCaptureCameraOverlayCtx = null;
+
+            try {
+                if (streamCaptureAudioGainNode) {
+                    streamCaptureAudioGainNode.disconnect();
+                }
+            } catch (e) {}
+
+            try {
+                if (streamCaptureAudioDest && streamCaptureAudioDest.disconnect) {
+                    streamCaptureAudioDest.disconnect();
+                }
+            } catch (e) {}
+
+            try {
+                if (streamCaptureAudioContext && streamCaptureAudioContext.state !== 'closed') {
+                    streamCaptureAudioContext.close();
+                }
+            } catch (e) {}
+
+            try {
+                if (streamCaptureMicAudioStream) {
+                    streamCaptureMicAudioStream.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {}
+
+            streamCaptureAudioContext = null;
+            streamCaptureAudioGainNode = null;
+            streamCaptureAudioDest = null;
+            streamCaptureMicAudioStream = null;
+        }
+
+        switchCameraButton.addEventListener('click', async () => {
+            currentCameraIndex = (currentCameraIndex + 1) % cameraList.length;
+            const deviceId = cameraList[currentCameraIndex].deviceId;
+            currentCameraDeviceId = deviceId;
+            await startCamera(deviceId);
+        });
+
+        switchMicButton.addEventListener('click', async () => {
+            currentMicIndex = (currentMicIndex + 1) % microphoneList.length;
+            currentMicDeviceId = microphoneList[currentMicIndex].deviceId;
+            // Replace audio track only (keep video stream running).
+            await replaceAudioTrackInCurrentStream(currentMicDeviceId);
+
+            // If a camera recording is active, update the GainNode input so the RECORDED audio switches mic immediately.
+            try {
+                if (cameraRecordingActive && cameraAudioContext && cameraAudioGainNode) {
+                    if (cameraAudioContext.state === 'suspended') cameraAudioContext.resume();
+                    if (cameraAudioSourceNode) cameraAudioSourceNode.disconnect();
+
+                    const tracks = currentStream ? currentStream.getAudioTracks() : [];
+                    if (tracks && tracks.length > 0) {
+                        const audioOnlyStream = new MediaStream(tracks);
+                        cameraAudioSourceNode = cameraAudioContext.createMediaStreamSource(audioOnlyStream);
+                        cameraAudioSourceNode.connect(cameraAudioGainNode);
+                    }
+                }
+            } catch (e) {}
+
+            // If audio-only recording is active, restart it on the new mic.
+            // (We suppress the in-between partial file download.)
+            if (audioRecorder && audioRecorder.state === 'recording') {
+                suppressAudioDownload = true;
+                stopAudioRecording();
+                startAudioRecording();
+            }
+        });
+
+        recordButton.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        takePhotoButton.addEventListener('click', takePhoto);
+
+        toggleScreenRecordingButton.addEventListener('click', () => {
+            if (screenMediaRecorder && screenMediaRecorder.state === 'recording') {
+                stopScreenRecordingExternally();
+            } else {
+                startScreenRecording();
+            }
+        });
+
+        toggleAudioRecordingButton.addEventListener('click', () => {
+            if (audioRecorder && audioRecorder.state === 'recording') {
+                stopAudioRecording();
+            } else {
+                startAudioRecording();
+            }
+        });
+
+        toggleStreamCaptureButton.addEventListener('click', () => {
+            if (streamCaptureRecorder && streamCaptureRecorder.state === 'recording') {
+                stopStreamCapture();
+            } else {
+                startStreamCapture();
+            }
+        });
+
+        mirrorToggleButton.addEventListener('click', () => {
+            mirrorFeed = !mirrorFeed;
+            updateMirroring();
+            updateMirrorToggleUI();
+            // Stream-capture PiP preview stays non-mirrored (canvas compositing handles mirroring for recording).
+        });
+
+        muteToggleButton.addEventListener('click', () => {
+            isMutedVideoAudio = !isMutedVideoAudio;
+            updateMuteToggleUI();
+            // If a camera/screen/stream recording is active (camera mode implemented now),
+            // update gain immediately so the RECORDED output changes without restarting.
+            try {
+                if (cameraAudioGainNode && cameraAudioContext) {
+                    if (cameraAudioContext.state === 'suspended') cameraAudioContext.resume();
+                    cameraAudioGainNode.gain.value = isMutedVideoAudio ? 0 : 1;
+                }
+                if (screenAudioGainNode && screenAudioContext) {
+                    if (screenAudioContext.state === 'suspended') screenAudioContext.resume();
+                    screenAudioGainNode.gain.value = isMutedVideoAudio ? 0 : 1;
+                }
+                if (streamCaptureAudioGainNode && streamCaptureAudioContext) {
+                    if (streamCaptureAudioContext.state === 'suspended') streamCaptureAudioContext.resume();
+                    streamCaptureAudioGainNode.gain.value = isMutedVideoAudio ? 0 : 1;
+                }
+            } catch (e) {}
+        });
+
+        initializeDevices();
+
+        // Initialize toggle UI once DOM is ready.
+        updateMirrorToggleUI();
+        updateMuteToggleUI();
+    </script>
+</body>
+</html>
