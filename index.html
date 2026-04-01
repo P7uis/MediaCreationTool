@@ -25,8 +25,68 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f4f4f4;
+        }
+
+        .lang-switcher {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: row;
+            gap: 6px;
+            align-items: center;
+            padding: 4px 6px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .lang-switcher .lang-btn {
+            margin: 0;
+            padding: 2px 4px;
+            line-height: 0;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            opacity: 0.55;
+            transition: opacity 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lang-switcher .lang-flag {
+            display: block;
+            line-height: 0;
+        }
+
+        .lang-switcher .lang-flag svg {
+            display: block;
+            width: 30px;
+            height: auto;
+            vertical-align: middle;
+            border-radius: 2px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+        }
+
+        .lang-switcher .lang-btn:hover {
+            opacity: 0.95;
+            transform: scale(1.08);
+        }
+
+        .lang-switcher .lang-btn:focus-visible {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+
+        .lang-switcher .lang-btn.active {
+            opacity: 1;
+            border-color: #007bff;
         }
         .container {
             text-align: center;
@@ -104,7 +164,7 @@
             visibility: hidden;
         }
         .preview-row.preview-row--awaiting-camera .preview-video-wrap::after {
-            content: 'Camera starten…';
+            content: var(--await-camera-msg, '…');
             position: absolute;
             inset: 0;
             display: flex;
@@ -865,15 +925,27 @@
 </head>
 <body>
 
+    <div class="lang-switcher" role="group" id="langSwitcher" aria-label="Language">
+        <button type="button" class="lang-btn" data-lang="nl" aria-label="Nederlands">
+            <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="30" height="20" focusable="false"><path fill="#AE1C28" d="M0 0h9v2H0z"/><path fill="#FFF" d="M0 2h9v2H0z"/><path fill="#21468B" d="M0 4h9v2H0z"/></svg></span>
+        </button>
+        <button type="button" class="lang-btn" data-lang="en" aria-label="English">
+            <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="30" height="15" focusable="false"><clipPath id="langClipGb"><path d="M0 0h60v30H0z"/></clipPath><path fill="#012169" d="M0 0h60v30H0z"/><path stroke="#FFF" stroke-width="6" d="M0 0l60 30M60 0L0 30" clip-path="url(#langClipGb)"/><path stroke="#C8102E" stroke-width="4" d="M0 0l60 30M60 0L0 30" clip-path="url(#langClipGb)"/><path stroke="#FFF" stroke-width="10" d="M30 0v30M0 15h60" clip-path="url(#langClipGb)"/><path stroke="#C8102E" stroke-width="6" d="M30 0v30M0 15h60" clip-path="url(#langClipGb)"/></svg></span>
+        </button>
+        <button type="button" class="lang-btn" data-lang="de" aria-label="Deutsch">
+            <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 3" width="30" height="18" focusable="false"><path fill="#000" d="M0 0h5v1H0z"/><path fill="#D00" d="M0 1h5v1H0z"/><path fill="#FFCE00" d="M0 2h5v1H0z"/></svg></span>
+        </button>
+    </div>
+
     <div class="container">
-        <div class="camera-constraints-bar" id="cameraConstraintsBar" aria-label="Camerainstellingen voorbeeld">
+        <div class="camera-constraints-bar" id="cameraConstraintsBar" data-i18n-aria="ariaCameraBar">
             <div class="camera-constraint-field">
-                <label for="cameraResolutionSelect">Resolutie</label>
-                <select id="cameraResolutionSelect" aria-label="Cameraresolutie"></select>
+                <label for="cameraResolutionSelect" data-i18n="labelResolution">Resolutie</label>
+                <select id="cameraResolutionSelect" data-i18n-aria="ariaCameraResolution"></select>
             </div>
             <div class="camera-constraint-field">
-                <label for="cameraFpsSelect">Beeldsnelheid (fps)</label>
-                <select id="cameraFpsSelect" aria-label="Camera beeldsnelheid"></select>
+                <label for="cameraFpsSelect" data-i18n="labelFps">Beeldsnelheid (fps)</label>
+                <select id="cameraFpsSelect" data-i18n-aria="ariaCameraFps"></select>
             </div>
         </div>
 
@@ -883,66 +955,66 @@
                     <video id="video" autoplay muted></video>
                 </div>
             </div>
-            <div class="zoom-column" id="zoomColumn" title="Scrollwiel om in of uit te zoomen">
-                <label for="zoomSlider">Digitale zoom<span class="zoom-value" id="zoomValueLabel" aria-hidden="true">1×</span></label>
+            <div class="zoom-column" id="zoomColumn" data-i18n-title="titleZoomColumn">
+                <label for="zoomSlider"><span data-i18n="labelDigitalZoom">Digitale zoom</span><span class="zoom-value" id="zoomValueLabel" aria-hidden="true">1×</span></label>
                 <div class="zoom-slider-slot">
-                    <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" aria-label="Digitale zoom, 1 tot 10 keer" title="Digitale zoom (1×–10×)">
+                    <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" data-i18n-aria="ariaZoom" data-i18n-title="titleZoomSlider">
                 </div>
             </div>
         </div>
 
         <div class="device-info">
-            <div id="cameraInfo">Geselecteerde camera: geen</div>
-            <div id="micInfo">Geselecteerde microfoon: geen</div>
+            <div id="cameraInfo" data-i18n="cameraNone">Geselecteerde camera: geen</div>
+            <div id="micInfo" data-i18n="micNone">Geselecteerde microfoon: geen</div>
         </div>
 
         <div id="recordingStatus" aria-live="polite" style="margin: 8px 0; font-size: 12px;"></div>
 
         <div class="controls">
             <div class="button-group">
-                <button id="switchCamera" aria-label="Wissel van camera">Wissel camera</button>
-                <button id="switchMic" aria-label="Wissel van microfoon">Wissel microfoon</button>
-                <button id="takePhoto" aria-label="Foto maken van video">Foto maken</button>
-                <button id="recordButton" aria-label="Camera-opname starten of stoppen">Start opname</button>
+                <button type="button" id="switchCamera" data-i18n="btnSwitchCamera" data-i18n-aria="ariaSwitchCamera">Wissel camera</button>
+                <button type="button" id="switchMic" data-i18n="btnSwitchMic" data-i18n-aria="ariaSwitchMic">Wissel microfoon</button>
+                <button type="button" id="takePhoto" data-i18n="btnTakePhoto" data-i18n-aria="ariaTakePhoto">Foto maken</button>
+                <button type="button" id="recordButton" data-i18n="btnStartRecord" data-i18n-aria="ariaRecordCamera">Start opname</button>
             </div>
             <div class="button-group">
-                <button id="mirrorToggle" aria-label="Spiegelen"><span id="mirrorToggleText">Spiegelen</span></button>
-                <button id="muteToggle" aria-label="Dempen"><span id="muteToggleText">Microfoon aan</span></button>
+                <button type="button" id="mirrorToggle" data-i18n-aria="ariaMirror"><span id="mirrorToggleText" data-i18n="btnMirror">Spiegelen</span></button>
+                <button type="button" id="muteToggle" data-i18n-aria="ariaMute"><span id="muteToggleText" data-i18n="micOn">Microfoon aan</span></button>
             </div>
             <div class="button-group">
-                <button id="toggleScreenRecording" aria-label="Schermopname starten of stoppen">Start schermopname</button>
-                <button id="toggleStreamCapture" aria-label="Stream-opname (scherm + camera) starten of stoppen">Start stream-opname</button>
-                <button id="toggleAudioRecording" aria-label="Alleen-audio-opname starten of stoppen">Start audio-opname</button>
+                <button type="button" id="toggleScreenRecording" data-i18n="btnStartScreen" data-i18n-aria="ariaScreenRecord">Start schermopname</button>
+                <button type="button" id="toggleStreamCapture" data-i18n="btnStartStream" data-i18n-aria="ariaStreamRecord">Start stream-opname</button>
+                <button type="button" id="toggleAudioRecording" data-i18n="btnStartAudio" data-i18n-aria="ariaAudioRecord">Start audio-opname</button>
             </div>
             <div class="button-group timelapse-row">
-                <button id="toggleTimelapse" aria-label="Timelapse starten of stoppen">Start timelapse</button>
-                <div class="timelapse-settings" aria-label="Timelapse-instellingen">
+                <button type="button" id="toggleTimelapse" data-i18n="btnStartTimelapse" data-i18n-aria="ariaTimelapse">Start timelapse</button>
+                <div class="timelapse-settings" data-i18n-aria="ariaTimelapseSettings">
                     <label>
-                        Interval (s)
+                        <span data-i18n="labelTimelapseInterval">Interval (s)</span>
                         <input id="timelapseInterval" type="number" min="1" step="1" value="2">
                     </label>
                     <label>
-                        Frames
+                        <span data-i18n="labelFrames">Frames</span>
                         <input id="timelapseFrames" type="number" min="2" step="1" value="601">
                     </label>
                     <label>
-                        Afspelen (fps)
+                        <span data-i18n="labelPlaybackFps">Afspelen (fps)</span>
                         <input id="timelapsePlaybackFps" type="number" min="5" step="1" value="30">
                     </label>
                 </div>
             </div>
-            <div class="timelapse-info-wrap" aria-label="Timelapse voortgang">
+            <div class="timelapse-info-wrap" data-i18n-aria="ariaTimelapseProgress">
                 <div class="timelapse-info-panel" id="timelapseInfoPanel" aria-live="polite">
                     <div class="timelapse-info-row">
-                        <span class="timelapse-info-label">Frames</span>
+                        <span class="timelapse-info-label" data-i18n="labelFrames">Frames</span>
                         <strong id="timelapseInfoFrames" class="timelapse-info-value">000 / 601</strong>
                     </div>
                     <div class="timelapse-info-row">
-                        <span class="timelapse-info-label">Opname</span>
+                        <span class="timelapse-info-label" data-i18n="labelTimelapseRecord">Opname</span>
                         <strong id="timelapseInfoRecord" class="timelapse-info-value">00:00:00 / 00:00:00</strong>
                     </div>
                     <div class="timelapse-info-row">
-                        <span class="timelapse-info-label">Afspelen</span>
+                        <span class="timelapse-info-label" data-i18n="labelTimelapsePlayback">Afspelen</span>
                         <strong id="timelapseInfoPlayback" class="timelapse-info-value">00:00:00 / 00:00:00</strong>
                     </div>
                 </div>
@@ -990,6 +1062,323 @@
         const zoomValueLabel = document.getElementById('zoomValueLabel');
         const cameraResolutionSelect = document.getElementById('cameraResolutionSelect');
         const cameraFpsSelect = document.getElementById('cameraFpsSelect');
+
+        let currentLang = 'nl';
+
+        const I18N = {
+            nl: {
+                pageTitle: 'Media-opname',
+                awaitCamera: 'Camera starten…',
+                labelResolution: 'Resolutie',
+                labelFps: 'Beeldsnelheid (fps)',
+                ariaCameraBar: 'Camerainstellingen en voorbeeld',
+                ariaCameraResolution: 'Cameraresolutie',
+                ariaCameraFps: 'Camera beeldsnelheid',
+                titleZoomColumn: 'Scrollwiel om in of uit te zoomen',
+                labelDigitalZoom: 'Digitale zoom',
+                ariaZoom: 'Digitale zoom, 1 tot 10 keer',
+                titleZoomSlider: 'Digitale zoom (1×–10×)',
+                cameraNone: 'Geselecteerde camera: geen',
+                micNone: 'Geselecteerde microfoon: geen',
+                btnSwitchCamera: 'Wissel camera',
+                ariaSwitchCamera: 'Wissel van camera',
+                btnSwitchMic: 'Wissel microfoon',
+                ariaSwitchMic: 'Wissel van microfoon',
+                btnTakePhoto: 'Foto maken',
+                ariaTakePhoto: 'Foto maken van video',
+                btnStartRecord: 'Start opname',
+                btnStopRecord: 'Stop opname',
+                ariaRecordCamera: 'Camera-opname starten of stoppen',
+                btnMirror: 'Spiegelen',
+                ariaMirror: 'Spiegelen',
+                micOn: 'Microfoon aan',
+                micOff: 'Microfoon uit',
+                ariaMute: 'Microfoon dempen of inschakelen',
+                btnStartScreen: 'Start schermopname',
+                btnStopScreen: 'Stop schermopname',
+                ariaScreenRecord: 'Schermopname starten of stoppen',
+                btnStartStream: 'Start stream-opname',
+                btnStopStream: 'Stop stream-opname',
+                ariaStreamRecord: 'Stream-opname (scherm en camera) starten of stoppen',
+                btnStartAudio: 'Start audio-opname',
+                btnStopAudio: 'Stop audio-opname',
+                ariaAudioRecord: 'Alleen-audio-opname starten of stoppen',
+                btnStartTimelapse: 'Start timelapse',
+                btnStopTimelapse: 'Stop timelapse',
+                ariaTimelapse: 'Timelapse starten of stoppen',
+                ariaTimelapseSettings: 'Timelapse-instellingen',
+                labelTimelapseInterval: 'Interval (s)',
+                labelFrames: 'Frames',
+                labelPlaybackFps: 'Afspelen (fps)',
+                ariaTimelapseProgress: 'Timelapse-voortgang',
+                labelTimelapseRecord: 'Opname',
+                labelTimelapsePlayback: 'Afspelen',
+                resolutionDefault: 'Standaard',
+                unknownDevice: 'Onbekend',
+                prefixCamera: 'Geselecteerde camera: {label}',
+                deviceLineResolution: 'Resolutie: {w}×{h}',
+                deviceLineFps: 'Beeldsnelheid: {rate} fps',
+                micWithLabel: 'Geselecteerde microfoon: {label}',
+                statusCameraStarted: 'Camera-opname gestart.',
+                statusCameraStopped: 'Camera-opname gestopt.',
+                statusScreenStarted: 'Schermopname gestart.',
+                statusScreenStopped: 'Schermopname gestopt.',
+                statusAudioSaved: 'Audio opgeslagen (WebM).',
+                statusAudioStarted: 'Audio-opname gestart.',
+                statusAudioStopped: 'Audio-opname gestopt.',
+                statusStreamStarted: 'Stream-opname gestart.',
+                statusStreamStopped: 'Stream-opname gestopt.',
+                statusTimelapseStarted: 'Timelapse-opname gestart.',
+                statusTimelapseProgress: 'Timelapse: {current}/{total} beelden vastgelegd',
+                statusTimelapseFewFrames: 'Timelapse gestopt (te weinig beelden).',
+                statusTimelapseProcessing: 'Timelapse: {n} beelden verwerken…',
+                statusTimelapseDone: 'Timelapse klaar.',
+                errNoCameraStream: 'Geen actieve camerastream.'
+            },
+            en: {
+                pageTitle: 'Media capture',
+                awaitCamera: 'Starting camera…',
+                labelResolution: 'Resolution',
+                labelFps: 'Frame rate (fps)',
+                ariaCameraBar: 'Camera settings and preview',
+                ariaCameraResolution: 'Camera resolution',
+                ariaCameraFps: 'Camera frame rate',
+                titleZoomColumn: 'Scroll wheel to zoom in or out',
+                labelDigitalZoom: 'Digital zoom',
+                ariaZoom: 'Digital zoom, 1 to 10×',
+                titleZoomSlider: 'Digital zoom (1×–10×)',
+                cameraNone: 'Selected camera: none',
+                micNone: 'Selected microphone: none',
+                btnSwitchCamera: 'Switch camera',
+                ariaSwitchCamera: 'Switch camera device',
+                btnSwitchMic: 'Switch microphone',
+                ariaSwitchMic: 'Switch microphone device',
+                btnTakePhoto: 'Take photo',
+                ariaTakePhoto: 'Take photo from video',
+                btnStartRecord: 'Start recording',
+                btnStopRecord: 'Stop recording',
+                ariaRecordCamera: 'Start or stop camera recording',
+                btnMirror: 'Mirror',
+                ariaMirror: 'Mirror preview',
+                micOn: 'Mic on',
+                micOff: 'Mic muted',
+                ariaMute: 'Mute or unmute microphone',
+                btnStartScreen: 'Start screen recording',
+                btnStopScreen: 'Stop screen recording',
+                ariaScreenRecord: 'Start or stop screen recording',
+                btnStartStream: 'Start stream capture',
+                btnStopStream: 'Stop stream capture',
+                ariaStreamRecord: 'Start or stop stream capture (screen + camera)',
+                btnStartAudio: 'Start audio recording',
+                btnStopAudio: 'Stop audio recording',
+                ariaAudioRecord: 'Start or stop audio-only recording',
+                btnStartTimelapse: 'Start timelapse',
+                btnStopTimelapse: 'Stop timelapse',
+                ariaTimelapse: 'Start or stop timelapse',
+                ariaTimelapseSettings: 'Timelapse settings',
+                labelTimelapseInterval: 'Interval (s)',
+                labelFrames: 'Frames',
+                labelPlaybackFps: 'Playback (fps)',
+                ariaTimelapseProgress: 'Timelapse progress',
+                labelTimelapseRecord: 'Recording',
+                labelTimelapsePlayback: 'Playback',
+                resolutionDefault: 'Default',
+                unknownDevice: 'Unknown',
+                prefixCamera: 'Selected camera: {label}',
+                deviceLineResolution: 'Resolution: {w}×{h}',
+                deviceLineFps: 'Frame rate: {rate} fps',
+                micWithLabel: 'Selected microphone: {label}',
+                statusCameraStarted: 'Camera recording started.',
+                statusCameraStopped: 'Camera recording stopped.',
+                statusScreenStarted: 'Screen recording started.',
+                statusScreenStopped: 'Screen recording stopped.',
+                statusAudioSaved: 'Audio saved (WebM).',
+                statusAudioStarted: 'Audio recording started.',
+                statusAudioStopped: 'Audio recording stopped.',
+                statusStreamStarted: 'Stream capture started.',
+                statusStreamStopped: 'Stream capture stopped.',
+                statusTimelapseStarted: 'Timelapse recording started.',
+                statusTimelapseProgress: 'Timelapse: {current}/{total} frames captured',
+                statusTimelapseFewFrames: 'Timelapse stopped (too few frames).',
+                statusTimelapseProcessing: 'Timelapse: processing {n} frames…',
+                statusTimelapseDone: 'Timelapse finished.',
+                errNoCameraStream: 'No active camera stream.'
+            },
+            de: {
+                pageTitle: 'Medienaufnahme',
+                awaitCamera: 'Kamera wird gestartet…',
+                labelResolution: 'Auflösung',
+                labelFps: 'Bildrate (fps)',
+                ariaCameraBar: 'Kameraeinstellungen und Vorschau',
+                ariaCameraResolution: 'Kameraauflösung',
+                ariaCameraFps: 'Kamera-Bildrate',
+                titleZoomColumn: 'Mausrad zum Zoomen',
+                labelDigitalZoom: 'Digitalzoom',
+                ariaZoom: 'Digitalzoom, 1- bis 10-fach',
+                titleZoomSlider: 'Digitalzoom (1×–10×)',
+                cameraNone: 'Ausgewählte Kamera: keine',
+                micNone: 'Ausgewähltes Mikrofon: keins',
+                btnSwitchCamera: 'Kamera wechseln',
+                ariaSwitchCamera: 'Kamera wechseln',
+                btnSwitchMic: 'Mikrofon wechseln',
+                ariaSwitchMic: 'Mikrofon wechseln',
+                btnTakePhoto: 'Foto aufnehmen',
+                ariaTakePhoto: 'Foto aus Video aufnehmen',
+                btnStartRecord: 'Aufnahme starten',
+                btnStopRecord: 'Aufnahme stoppen',
+                ariaRecordCamera: 'Kameraaufnahme starten oder stoppen',
+                btnMirror: 'Spiegeln',
+                ariaMirror: 'Vorschau spiegeln',
+                micOn: 'Mikrofon an',
+                micOff: 'Mikrofon stumm',
+                ariaMute: 'Mikrofon stummschalten oder aktivieren',
+                btnStartScreen: 'Bildschirmaufnahme starten',
+                btnStopScreen: 'Bildschirmaufnahme stoppen',
+                ariaScreenRecord: 'Bildschirmaufnahme starten oder stoppen',
+                btnStartStream: 'Stream-Aufnahme starten',
+                btnStopStream: 'Stream-Aufnahme stoppen',
+                ariaStreamRecord: 'Stream-Aufnahme (Bildschirm + Kamera) starten oder stoppen',
+                btnStartAudio: 'Audioaufnahme starten',
+                btnStopAudio: 'Audioaufnahme stoppen',
+                ariaAudioRecord: 'Nur-Audio-Aufnahme starten oder stoppen',
+                btnStartTimelapse: 'Zeitraffer starten',
+                btnStopTimelapse: 'Zeitraffer stoppen',
+                ariaTimelapse: 'Zeitraffer starten oder stoppen',
+                ariaTimelapseSettings: 'Zeitraffer-Einstellungen',
+                labelTimelapseInterval: 'Intervall (s)',
+                labelFrames: 'Frames',
+                labelPlaybackFps: 'Wiedergabe (fps)',
+                ariaTimelapseProgress: 'Zeitraffer-Fortschritt',
+                labelTimelapseRecord: 'Aufnahme',
+                labelTimelapsePlayback: 'Wiedergabe',
+                resolutionDefault: 'Standard',
+                unknownDevice: 'Unbekannt',
+                prefixCamera: 'Ausgewählte Kamera: {label}',
+                deviceLineResolution: 'Auflösung: {w}×{h}',
+                deviceLineFps: 'Bildrate: {rate} fps',
+                micWithLabel: 'Ausgewähltes Mikrofon: {label}',
+                statusCameraStarted: 'Kameraaufnahme gestartet.',
+                statusCameraStopped: 'Kameraaufnahme gestoppt.',
+                statusScreenStarted: 'Bildschirmaufnahme gestartet.',
+                statusScreenStopped: 'Bildschirmaufnahme gestoppt.',
+                statusAudioSaved: 'Audio gespeichert (WebM).',
+                statusAudioStarted: 'Audioaufnahme gestartet.',
+                statusAudioStopped: 'Audioaufnahme gestoppt.',
+                statusStreamStarted: 'Stream-Aufnahme gestartet.',
+                statusStreamStopped: 'Stream-Aufnahme gestoppt.',
+                statusTimelapseStarted: 'Zeitraffer-Aufnahme gestartet.',
+                statusTimelapseProgress: 'Zeitraffer: {current}/{total} Bilder erfasst',
+                statusTimelapseFewFrames: 'Zeitraffer gestoppt (zu wenige Bilder).',
+                statusTimelapseProcessing: 'Zeitraffer: {n} Bilder werden verarbeitet…',
+                statusTimelapseDone: 'Zeitraffer fertig.',
+                errNoCameraStream: 'Kein aktiver Kamerastream.'
+            }
+        };
+
+        function t(key, params) {
+            const dict = I18N[currentLang] || I18N.en;
+            const fall = I18N.en;
+            let s = dict[key];
+            if (s == null || s === '') s = fall[key] != null ? fall[key] : key;
+            if (params && typeof params === 'object') {
+                Object.keys(params).forEach((k) => {
+                    s = s.split('{' + k + '}').join(String(params[k]));
+                });
+            }
+            return s;
+        }
+
+        function detectInitialLang() {
+            try {
+                const saved = localStorage.getItem('mediacapture-lang');
+                if (saved === 'nl' || saved === 'en' || saved === 'de') return saved;
+            } catch (e) {}
+            const list =
+                navigator.languages && navigator.languages.length
+                    ? navigator.languages
+                    : [navigator.language || 'en'];
+            for (const raw of list) {
+                const low = String(raw).toLowerCase();
+                if (low.startsWith('nl')) return 'nl';
+                if (low.startsWith('de')) return 'de';
+                if (low.startsWith('en')) return 'en';
+            }
+            return 'en';
+        }
+
+        function syncRecordingButtonLabels() {
+            if (recordButton) {
+                recordButton.textContent = recordButton.classList.contains('recording')
+                    ? t('btnStopRecord')
+                    : t('btnStartRecord');
+            }
+            if (toggleScreenRecordingButton) {
+                toggleScreenRecordingButton.textContent = toggleScreenRecordingButton.classList.contains('recording')
+                    ? t('btnStopScreen')
+                    : t('btnStartScreen');
+            }
+            if (toggleStreamCaptureButton) {
+                toggleStreamCaptureButton.textContent = toggleStreamCaptureButton.classList.contains('recording')
+                    ? t('btnStopStream')
+                    : t('btnStartStream');
+            }
+            if (toggleAudioRecordingButton) {
+                toggleAudioRecordingButton.textContent = toggleAudioRecordingButton.classList.contains('recording')
+                    ? t('btnStopAudio')
+                    : t('btnStartAudio');
+            }
+            if (toggleTimelapseButton) {
+                toggleTimelapseButton.textContent = toggleTimelapseButton.classList.contains('recording')
+                    ? t('btnStopTimelapse')
+                    : t('btnStartTimelapse');
+            }
+        }
+
+        function applyLanguage(lang) {
+            if (lang !== 'nl' && lang !== 'en' && lang !== 'de') lang = 'en';
+            currentLang = lang;
+            try {
+                localStorage.setItem('mediacapture-lang', lang);
+            } catch (e) {}
+            document.documentElement.lang = lang === 'de' ? 'de' : lang === 'nl' ? 'nl' : 'en';
+            document.title = t('pageTitle');
+            document.documentElement.style.setProperty('--await-camera-msg', JSON.stringify(t('awaitCamera')));
+
+            document.querySelectorAll('[data-i18n]').forEach((el) => {
+                if (el.closest('.lang-switcher')) return;
+                const key = el.getAttribute('data-i18n');
+                if (key) el.textContent = t(key);
+            });
+            document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+                if (el.closest('.lang-switcher')) return;
+                const key = el.getAttribute('data-i18n-aria');
+                if (key) el.setAttribute('aria-label', t(key));
+            });
+            document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+                if (el.closest('.lang-switcher')) return;
+                const key = el.getAttribute('data-i18n-title');
+                if (key) el.setAttribute('title', t(key));
+            });
+
+            syncRecordingButtonLabels();
+            if (typeof updateMuteToggleUI === 'function') updateMuteToggleUI();
+            if (typeof updateMirrorToggleUI === 'function') updateMirrorToggleUI();
+            try {
+                if (typeof updateDeviceInfo === 'function') updateDeviceInfo();
+            } catch (e) {}
+
+            if (cameraResolutionSelect && cameraResolutionSelect.options.length) {
+                const z = cameraResolutionSelect.options[0];
+                if (z && z.value === '') z.textContent = t('resolutionDefault');
+            }
+
+            document.querySelectorAll('.lang-switcher [data-lang]').forEach((b) => {
+                const code = b.getAttribute('data-lang');
+                const on = code === lang;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }
 
         /** Common sizes up through 8K; filtered by getCapabilities() (includes 5K / DCI-style heights). */
         const STANDARD_CAMERA_RESOLUTIONS = [
@@ -1144,7 +1533,7 @@
             if (resChoices.length === 0) {
                 const o = document.createElement('option');
                 o.value = '';
-                o.textContent = 'Standaard';
+                o.textContent = t('resolutionDefault');
                 cameraResolutionSelect.appendChild(o);
             } else {
                 for (const { w, h } of resChoices) {
@@ -1190,7 +1579,7 @@
             cameraResolutionSelect.innerHTML = '';
             const ro = document.createElement('option');
             ro.value = '';
-            ro.textContent = 'Standaard';
+            ro.textContent = t('resolutionDefault');
             cameraResolutionSelect.appendChild(ro);
             cameraFpsSelect.innerHTML = '';
             const fo = document.createElement('option');
@@ -1448,7 +1837,7 @@
         }
 
         function updateMuteToggleUI() {
-            muteToggleText.textContent = isMutedVideoAudio ? 'Microfoon uit' : 'Microfoon aan';
+            muteToggleText.textContent = isMutedVideoAudio ? t('micOff') : t('micOn');
             muteToggleButton.classList.toggle('muted', isMutedVideoAudio);
             muteToggleButton.setAttribute('aria-pressed', isMutedVideoAudio ? 'true' : 'false');
         }
@@ -1711,27 +2100,31 @@
 
         function updateDeviceInfo(settings = null) {
             if (cameraList.length > 0) {
-                let cameraText = `Geselecteerde camera: ${cameraList[currentCameraIndex].label || 'Onbekend'}`;
+                let cameraText = t('prefixCamera', {
+                    label: cameraList[currentCameraIndex].label || t('unknownDevice')
+                });
                 if (settings) {
-                    cameraText += `\nResolutie: ${settings.width}×${settings.height}`;
-                    cameraText += `\nBeeldsnelheid: ${settings.frameRate} fps`;
+                    cameraText += '\n' + t('deviceLineResolution', { w: settings.width, h: settings.height });
+                    cameraText += '\n' + t('deviceLineFps', { rate: settings.frameRate });
                 }
                 cameraInfo.textContent = cameraText;
             } else {
-                cameraInfo.textContent = 'Geselecteerde camera: geen';
+                cameraInfo.textContent = t('cameraNone');
             }
 
             if (microphoneList.length > 0) {
-                micInfo.textContent = `Geselecteerde microfoon: ${microphoneList[currentMicIndex].label || 'Onbekend'}`;
+                micInfo.textContent = t('micWithLabel', {
+                    label: microphoneList[currentMicIndex].label || t('unknownDevice')
+                });
             } else {
-                micInfo.textContent = 'Geselecteerde microfoon: geen';
+                micInfo.textContent = t('micNone');
             }
         }
 
         async function startRecording() {
             try {
                 if (!currentStream) {
-                    throw new Error('Geen actieve camerastream.');
+                    throw new Error(t('errNoCameraStream'));
                 }
 
                 // If we somehow have stale artifacts from an earlier attempt, remove them.
@@ -1821,9 +2214,9 @@
 
                 cameraDrawRequestId = requestAnimationFrame(drawFrame);
 
-                recordButton.textContent = 'Stop opname';
+                recordButton.textContent = t('btnStopRecord');
                 recordButton.classList.add('recording');
-                if (recordingStatus) recordingStatus.textContent = 'Camera-opname gestart.';
+                if (recordingStatus) recordingStatus.textContent = t('statusCameraStarted');
                 recordButton.setAttribute('aria-pressed', 'true');
                 activeRecordingType = 'camera';
                 setRecordingLock(recordButton);
@@ -1844,9 +2237,9 @@
                 cameraDrawRequestId = null;
             }
 
-            recordButton.textContent = 'Start opname';
+            recordButton.textContent = t('btnStartRecord');
             recordButton.classList.remove('recording');
-            if (recordingStatus) recordingStatus.textContent = 'Camera-opname gestopt.';
+            if (recordingStatus) recordingStatus.textContent = t('statusCameraStopped');
             recordButton.setAttribute('aria-pressed', 'false');
             clearRecordingLock();
             updateCameraConstraintControlsState();
@@ -2445,9 +2838,9 @@
                 screenDrawRequestId = requestAnimationFrame(drawFrame);
 
                 screenMediaRecorder.start();
-                toggleScreenRecordingButton.textContent = 'Stop schermopname';
+                toggleScreenRecordingButton.textContent = t('btnStopScreen');
                 toggleScreenRecordingButton.classList.add('recording');
-                if (recordingStatus) recordingStatus.textContent = 'Schermopname gestart.';
+                if (recordingStatus) recordingStatus.textContent = t('statusScreenStarted');
                 toggleScreenRecordingButton.setAttribute('aria-pressed', 'true');
                 setRecordingLock(toggleScreenRecordingButton);
                 screenCaptureStarting = false;
@@ -2508,9 +2901,9 @@
             if (wasRecording) {
                 screenMediaRecorder.stop();
             }
-            toggleScreenRecordingButton.textContent = 'Start schermopname';
+            toggleScreenRecordingButton.textContent = t('btnStartScreen');
             toggleScreenRecordingButton.classList.remove('recording');
-            if (recordingStatus) recordingStatus.textContent = 'Schermopname gestopt.';
+            if (recordingStatus) recordingStatus.textContent = t('statusScreenStopped');
             toggleScreenRecordingButton.setAttribute('aria-pressed', 'false');
             clearRecordingLock();
             if (screenStream) {
@@ -2626,14 +3019,14 @@
                             document.body.appendChild(a);
                             a.click();
                             URL.revokeObjectURL(url);
-                            if (recordingStatus) recordingStatus.textContent = 'Audio opgeslagen (WebM).';
+                            if (recordingStatus) recordingStatus.textContent = t('statusAudioSaved');
                         }
                     };
 
                     rec.start(100);
-                    toggleAudioRecordingButton.textContent = 'Stop audio-opname';
+                    toggleAudioRecordingButton.textContent = t('btnStopAudio');
                     toggleAudioRecordingButton.classList.add('recording');
-                    if (recordingStatus) recordingStatus.textContent = 'Audio-opname gestart.';
+                    if (recordingStatus) recordingStatus.textContent = t('statusAudioStarted');
                     toggleAudioRecordingButton.setAttribute('aria-pressed', 'true');
                     setRecordingLock(toggleAudioRecordingButton);
                 })
@@ -2652,10 +3045,10 @@
                 }
             } catch (e) {}
             audioRecorder.stop();
-            toggleAudioRecordingButton.textContent = 'Start audio-opname';
+            toggleAudioRecordingButton.textContent = t('btnStartAudio');
             toggleAudioRecordingButton.classList.remove('recording');
             if (recordingStatus) {
-                recordingStatus.textContent = 'Audio-opname gestopt.';
+                recordingStatus.textContent = t('statusAudioStopped');
             }
             toggleAudioRecordingButton.setAttribute('aria-pressed', 'false');
             clearRecordingLock();
@@ -2802,12 +3195,12 @@
             }, 100);
 
             updateCameraConstraintControlsState();
-            toggleTimelapseButton.textContent = 'Stop timelapse';
+            toggleTimelapseButton.textContent = t('btnStopTimelapse');
             toggleTimelapseButton.classList.add('recording');
             toggleTimelapseButton.setAttribute('aria-pressed', 'true');
             activeRecordingType = 'timelapse';
             setRecordingLock(toggleTimelapseButton);
-            if (recordingStatus) recordingStatus.textContent = 'Timelapse-opname gestart.';
+            if (recordingStatus) recordingStatus.textContent = t('statusTimelapseStarted');
 
             // Capture frames from the current camera preview into ImageBitmaps.
             const captureCanvas = document.createElement('canvas');
@@ -2825,7 +3218,12 @@
                     const bmp = await createImageBitmap(captureCanvas);
                     timelapseFrames.push(bmp);
                     updateTimelapseInfoDuringCapture();
-                    if (recordingStatus) recordingStatus.textContent = `Timelapse: ${timelapseFrames.length}/${targetFrames} beelden vastgelegd`;
+                    if (recordingStatus) {
+                        recordingStatus.textContent = t('statusTimelapseProgress', {
+                            current: timelapseFrames.length,
+                            total: targetFrames
+                        });
+                    }
                 } catch (e) {
                     console.error('Timelapse capture frame failed:', e);
                 }
@@ -2844,7 +3242,7 @@
         async function stopTimelapse(playbackFpsOverride = null) {
             if (!timelapseCapturing && timelapseFrames.length === 0) {
                 // Still reset UI in case.
-                toggleTimelapseButton.textContent = 'Start timelapse';
+                toggleTimelapseButton.textContent = t('btnStartTimelapse');
                 toggleTimelapseButton.classList.remove('recording');
                 toggleTimelapseButton.setAttribute('aria-pressed', 'false');
                 clearRecordingLock();
@@ -2869,7 +3267,7 @@
 
             const playbackFps = playbackFpsOverride ?? Math.max(5, parseInt(timelapsePlaybackFpsInput.value || '30', 10));
 
-            toggleTimelapseButton.textContent = 'Start timelapse';
+            toggleTimelapseButton.textContent = t('btnStartTimelapse');
             toggleTimelapseButton.classList.remove('recording');
             toggleTimelapseButton.setAttribute('aria-pressed', 'false');
             clearRecordingLock();
@@ -2877,14 +3275,16 @@
             const framesToRender = timelapseFrames.slice();
             if (framesToRender.length < 2) {
                 cleanupTimelapseArtifacts();
-                if (recordingStatus) recordingStatus.textContent = 'Timelapse gestopt (te weinig beelden).';
+                if (recordingStatus) recordingStatus.textContent = t('statusTimelapseFewFrames');
                 updateCameraConstraintControlsState();
                 return;
             }
 
             updateTimelapseInfoDuringEncoding(0, framesToRender.length, finalRecordSec);
 
-            if (recordingStatus) recordingStatus.textContent = `Timelapse: ${framesToRender.length} beelden verwerken…`;
+            if (recordingStatus) {
+                recordingStatus.textContent = t('statusTimelapseProcessing', { n: framesToRender.length });
+            }
 
             // Render frames quickly into a canvas and record that canvas to a single file.
             const outCanvas = document.createElement('canvas');
@@ -2926,7 +3326,7 @@
                 } catch (e) {}
                 timelapseFrames = [];
                 updateTimelapseInfoIdle();
-                if (recordingStatus) recordingStatus.textContent = 'Timelapse klaar.';
+                if (recordingStatus) recordingStatus.textContent = t('statusTimelapseDone');
             };
 
             recorder.start();
@@ -3207,9 +3607,9 @@
                 });
 
                 streamCaptureRecorder.start();
-                toggleStreamCaptureButton.textContent = 'Stop stream-opname';
+                toggleStreamCaptureButton.textContent = t('btnStopStream');
                 toggleStreamCaptureButton.classList.add('recording');
-                if (recordingStatus) recordingStatus.textContent = 'Stream-opname gestart.';
+                if (recordingStatus) recordingStatus.textContent = t('statusStreamStarted');
                 toggleStreamCaptureButton.setAttribute('aria-pressed', 'true');
                 setRecordingLock(toggleStreamCaptureButton);
                 toggleStreamCaptureButton.setAttribute('aria-pressed', 'true');
@@ -3263,9 +3663,9 @@
             if (wasRecording) {
                 streamCaptureRecorder.stop();
             }
-            toggleStreamCaptureButton.textContent = 'Start stream-opname';
+            toggleStreamCaptureButton.textContent = t('btnStartStream');
             toggleStreamCaptureButton.classList.remove('recording');
-            if (recordingStatus) recordingStatus.textContent = 'Stream-opname gestopt.';
+            if (recordingStatus) recordingStatus.textContent = t('statusStreamStopped');
             toggleStreamCaptureButton.setAttribute('aria-pressed', 'false');
             clearRecordingLock();
 
@@ -3626,6 +4026,12 @@
                 }
             });
         }
+
+        currentLang = detectInitialLang();
+        applyLanguage(currentLang);
+        document.querySelectorAll('.lang-switcher [data-lang]').forEach((btn) => {
+            btn.addEventListener('click', () => applyLanguage(btn.getAttribute('data-lang')));
+        });
 
         initializeDevices();
 
