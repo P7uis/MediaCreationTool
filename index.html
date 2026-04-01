@@ -17,6 +17,60 @@
     <title>Media-opname</title>
     <link rel="icon" type="image/x-icon" href="/images/glados.ico">
     <style>
+        :root {
+            --mc-bg: #f4f4f4;
+            --mc-fg: #222;
+            --mc-fg-soft: #333;
+            --mc-muted: #555;
+            --mc-panel: rgba(255, 255, 255, 0.92);
+            --mc-panel-border: rgba(0, 0, 0, 0.12);
+            --mc-panel-shadow: rgba(0, 0, 0, 0.08);
+            --mc-card: rgba(0, 0, 0, 0.04);
+            --mc-card-border: rgba(0, 0, 0, 0.1);
+            --mc-input-bg: #fff;
+            --mc-input-border: #ccc;
+            --mc-input-text: #111;
+            --mc-label: #333;
+            --mc-video-border: #ccc;
+            --mc-zoom-text: #222;
+            --mc-await: #aaa;
+            --mc-tl-bg: rgba(0, 0, 0, 0.06);
+            --mc-tl-border: rgba(0, 0, 0, 0.12);
+            --mc-tl-label: #111;
+            --mc-tl-value: #111;
+            --mc-tl-info: #222;
+            --mc-tl-info-muted: #555;
+            --mc-focus: #007bff;
+            --mc-lang-flag-ring: rgba(0, 0, 0, 0.08);
+        }
+
+        html.mc-theme-dark {
+            --mc-bg: #131316;
+            --mc-fg: #ececf1;
+            --mc-fg-soft: #d4d4dc;
+            --mc-muted: #9b9bab;
+            --mc-panel: rgba(34, 34, 40, 0.96);
+            --mc-panel-border: rgba(255, 255, 255, 0.12);
+            --mc-panel-shadow: rgba(0, 0, 0, 0.35);
+            --mc-card: rgba(255, 255, 255, 0.06);
+            --mc-card-border: rgba(255, 255, 255, 0.1);
+            --mc-input-bg: #25252c;
+            --mc-input-border: #4a4a58;
+            --mc-input-text: #ececf1;
+            --mc-label: #c4c4d0;
+            --mc-video-border: #555;
+            --mc-zoom-text: #d8d8e4;
+            --mc-await: #888;
+            --mc-tl-bg: rgba(255, 255, 255, 0.07);
+            --mc-tl-border: rgba(255, 255, 255, 0.12);
+            --mc-tl-label: #e2e2ea;
+            --mc-tl-value: #fff;
+            --mc-tl-info: #ddd;
+            --mc-tl-info-muted: #9a9aaa;
+            --mc-focus: #5eb0ff;
+            --mc-lang-flag-ring: rgba(255, 255, 255, 0.15);
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -26,23 +80,105 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f4f4f4;
+            background-color: var(--mc-bg);
+            color: var(--mc-fg);
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        .lang-switcher {
+        .chrome-stack {
             position: fixed;
             top: 10px;
             right: 10px;
             z-index: 100000;
             display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .lang-switcher {
+            display: flex;
             flex-direction: row;
             gap: 6px;
             align-items: center;
             padding: 4px 6px;
-            background: rgba(255, 255, 255, 0.92);
-            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: var(--mc-panel);
+            border: 1px solid var(--mc-panel-border);
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px var(--mc-panel-shadow);
+        }
+
+        .theme-switcher {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 6px;
+            background: var(--mc-panel);
+            border: 1px solid var(--mc-panel-border);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px var(--mc-panel-shadow);
+        }
+
+        .theme-switcher .theme-btn {
+            margin: 0;
+            padding: 4px;
+            line-height: 0;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            opacity: 0.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+            color: var(--mc-fg);
+        }
+
+        .theme-switcher .theme-btn:hover {
+            opacity: 0.92;
+            transform: scale(1.06);
+        }
+
+        .theme-switcher .theme-btn:focus-visible {
+            outline: 2px solid var(--mc-focus);
+            outline-offset: 2px;
+        }
+
+        .theme-switcher .theme-btn.active {
+            opacity: 1;
+            border-color: var(--mc-focus);
+        }
+
+        .theme-switcher .theme-btn svg {
+            display: block;
+            width: 22px;
+            height: 22px;
+        }
+
+        html.mc-theme-dark .theme-switcher,
+        html.mc-theme-dark .lang-switcher {
+            background: rgba(18, 18, 24, 0.98);
+            border-color: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+        }
+
+        html.mc-theme-dark .theme-switcher .theme-btn {
+            color: #a6a6b4;
+        }
+
+        html.mc-theme-dark .theme-switcher .theme-btn:hover {
+            color: #c4c4d0;
+        }
+
+        html.mc-theme-dark .theme-switcher .theme-btn.active {
+            color: #d8d8e4;
+            border-color: #4580c4;
+        }
+
+        html.mc-theme-dark .theme-switcher .theme-btn:focus-visible {
+            outline-color: #4580c4;
         }
 
         .lang-switcher .lang-btn {
@@ -71,7 +207,7 @@
             height: auto;
             vertical-align: middle;
             border-radius: 2px;
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 0 0 1px var(--mc-lang-flag-ring);
         }
 
         .lang-switcher .lang-btn:hover {
@@ -80,13 +216,13 @@
         }
 
         .lang-switcher .lang-btn:focus-visible {
-            outline: 2px solid #007bff;
+            outline: 2px solid var(--mc-focus);
             outline-offset: 2px;
         }
 
         .lang-switcher .lang-btn.active {
             opacity: 1;
-            border-color: #007bff;
+            border-color: var(--mc-focus);
         }
         .container {
             text-align: center;
@@ -101,9 +237,10 @@
             gap: 12px 16px;
             margin-bottom: 10px;
             padding: 10px 8px;
-            background: rgba(0, 0, 0, 0.04);
+            background: var(--mc-card);
             border-radius: 8px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--mc-card-border);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .camera-constraint-field {
             display: flex;
@@ -115,7 +252,7 @@
         .camera-constraint-field label {
             font-size: 11px;
             font-weight: 600;
-            color: #333;
+            color: var(--mc-label);
             text-transform: uppercase;
             letter-spacing: 0.03em;
         }
@@ -125,8 +262,9 @@
             padding: 6px 8px;
             font-size: 13px;
             border-radius: 5px;
-            border: 1px solid #ccc;
-            background: #fff;
+            border: 1px solid var(--mc-input-border);
+            background: var(--mc-input-bg);
+            color: var(--mc-input-text);
             cursor: pointer;
         }
         .camera-constraint-field select:disabled {
@@ -171,7 +309,7 @@
             align-items: center;
             justify-content: center;
             font-size: 14px;
-            color: #aaa;
+            color: var(--mc-await);
             pointer-events: none;
         }
         /*
@@ -195,7 +333,7 @@
             max-width: 100%;
             max-height: min(70vh, 640px);
             margin: 0;
-            border: 1px solid #ccc;
+            border: 1px solid var(--mc-video-border);
             border-radius: 2px;
             box-sizing: border-box;
             object-fit: contain;
@@ -210,14 +348,15 @@
             gap: 4px;
             padding: 8px 4px;
             min-height: 180px;
-            background: rgba(0, 0, 0, 0.04);
+            background: var(--mc-card);
             border-radius: 6px;
-            border: 1px solid rgba(0, 0, 0, 0.12);
+            border: 1px solid var(--mc-card-border);
             cursor: ns-resize;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .zoom-column label {
             font-size: 11px;
-            color: #222;
+            color: var(--mc-zoom-text);
             writing-mode: horizontal-tb;
             line-height: 1.2;
         }
@@ -243,7 +382,7 @@
             transform: rotate(-90deg);
             transform-origin: center center;
             cursor: pointer;
-            accent-color: #007bff;
+            accent-color: var(--mc-focus);
         }
         video {
             display: block;
@@ -343,6 +482,34 @@
             font-size: 12px;
             line-height: 1.2;
             text-align: center;
+            color: var(--mc-muted);
+            white-space: pre-line;
+        }
+
+        .progress-container {
+            margin-top: 12px;
+            color: var(--mc-muted);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--mc-card);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--mc-card-border);
+        }
+
+        .progress-bar span {
+            display: block;
+            height: 100%;
+            background: var(--mc-focus);
+            width: 0;
+            transition: width 0.2s ease;
+        }
+
+        .progress-text {
+            margin-top: 6px;
+            font-size: 12px;
         }
         .controls {
             margin-bottom: 20px;
@@ -448,6 +615,167 @@
                 0 0 0 2px rgba(255, 23, 68, 0.35),
                 0 0 14px rgba(255, 23, 68, 0.35);
         }
+
+        /* Dark theme: same hues, lower luminance so controls sit better on dark UI */
+        html.mc-theme-dark #switchCamera {
+            background-color: #9a480b;
+        }
+        html.mc-theme-dark #switchCamera:hover {
+            background-color: #7d3c09;
+        }
+        html.mc-theme-dark #switchCamera:active {
+            background-color: #683208;
+        }
+
+        html.mc-theme-dark #switchMic {
+            background-color: #9f7705;
+        }
+        html.mc-theme-dark #switchMic:hover {
+            background-color: #856204;
+        }
+        html.mc-theme-dark #switchMic:active {
+            background-color: #6d5203;
+        }
+
+        html.mc-theme-dark #takePhoto {
+            background-color: #004ea3;
+        }
+        html.mc-theme-dark #takePhoto:hover {
+            background-color: #004188;
+        }
+        html.mc-theme-dark #takePhoto:active {
+            background-color: #003670;
+        }
+
+        html.mc-theme-dark #recordButton {
+            background-color: #185f2a;
+        }
+        html.mc-theme-dark #recordButton:hover {
+            background-color: #134f24;
+        }
+        html.mc-theme-dark #recordButton:active {
+            background-color: #0f421e;
+        }
+        html.mc-theme-dark #recordButton.recording {
+            background-color: #8b222c;
+        }
+        html.mc-theme-dark #recordButton.recording:hover {
+            background-color: #731d26;
+        }
+        html.mc-theme-dark #recordButton.recording:active {
+            background-color: #5f181f;
+        }
+
+        html.mc-theme-dark #toggleStreamCapture {
+            background-color: #0e6672;
+        }
+        html.mc-theme-dark #toggleStreamCapture:hover {
+            background-color: #0b555f;
+        }
+        html.mc-theme-dark #toggleStreamCapture:active {
+            background-color: #09464e;
+        }
+        html.mc-theme-dark #toggleStreamCapture.recording {
+            background-color: #8b222c;
+        }
+        html.mc-theme-dark #toggleStreamCapture.recording:hover {
+            background-color: #731d26;
+        }
+        html.mc-theme-dark #toggleStreamCapture.recording:active {
+            background-color: #5f181f;
+        }
+
+        html.mc-theme-dark #toggleAudioRecording {
+            background-color: #472b82;
+        }
+        html.mc-theme-dark #toggleAudioRecording:hover {
+            background-color: #38246c;
+        }
+        html.mc-theme-dark #toggleAudioRecording:active {
+            background-color: #2d1d5e;
+        }
+        html.mc-theme-dark #toggleAudioRecording.recording {
+            background-color: #8b222c;
+        }
+        html.mc-theme-dark #toggleAudioRecording.recording:hover {
+            background-color: #731d26;
+        }
+        html.mc-theme-dark #toggleAudioRecording.recording:active {
+            background-color: #5f181f;
+        }
+
+        html.mc-theme-dark #toggleScreenRecording {
+            background-color: #b04370;
+        }
+        html.mc-theme-dark #toggleScreenRecording:hover {
+            background-color: #94385f;
+        }
+        html.mc-theme-dark #toggleScreenRecording:active {
+            background-color: #7a2e4f;
+        }
+        html.mc-theme-dark #toggleScreenRecording.recording {
+            background-color: #8b222c;
+        }
+        html.mc-theme-dark #toggleScreenRecording.recording:hover {
+            background-color: #731d26;
+        }
+        html.mc-theme-dark #toggleScreenRecording.recording:active {
+            background-color: #5f181f;
+        }
+
+        html.mc-theme-dark #toggleTimelapse {
+            background-color: #1a1d21;
+        }
+        html.mc-theme-dark #toggleTimelapse:hover {
+            background-color: #131619;
+        }
+        html.mc-theme-dark #toggleTimelapse:active {
+            background-color: #0e1012;
+        }
+        html.mc-theme-dark #toggleTimelapse.recording {
+            background-color: #8b222c;
+        }
+        html.mc-theme-dark #toggleTimelapse.recording:hover {
+            background-color: #731d26;
+        }
+        html.mc-theme-dark #toggleTimelapse.recording:active {
+            background-color: #5f181f;
+        }
+
+        html.mc-theme-dark #mirrorToggle,
+        html.mc-theme-dark #mirrorToggle.mirrored {
+            background-color: #009f5e;
+        }
+        html.mc-theme-dark #mirrorToggle:hover,
+        html.mc-theme-dark #mirrorToggle.mirrored:hover {
+            background-color: #008852;
+        }
+        html.mc-theme-dark #mirrorToggle:active,
+        html.mc-theme-dark #mirrorToggle.mirrored:active {
+            background-color: #007146;
+        }
+
+        html.mc-theme-dark #muteToggle {
+            background-color: #050505;
+            border-color: #007a38;
+            box-shadow:
+                0 0 0 2px rgba(0, 122, 56, 0.22),
+                0 0 10px rgba(0, 122, 56, 0.2);
+        }
+        html.mc-theme-dark #muteToggle.muted {
+            border-color: #9a1f2c;
+            box-shadow:
+                0 0 0 2px rgba(154, 31, 44, 0.22),
+                0 0 10px rgba(154, 31, 44, 0.2);
+        }
+
+        html.mc-theme-dark .button-group > button:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+        }
+        html.mc-theme-dark .button-group > button:active {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+
         .checkbox-group {
             margin-bottom: 20px;
         }
@@ -497,11 +825,12 @@
             gap: 6px 8px;
             padding: 6px 10px;
             border-radius: 5px;
-            background: rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.12);
+            background: var(--mc-tl-bg);
+            border: 1px solid var(--mc-tl-border);
             box-sizing: border-box;
             overflow-x: auto;
             overflow-y: visible;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .timelapse-info-wrap {
             width: 100%;
@@ -510,13 +839,14 @@
             margin: 0 0 20px 0;
             padding: 6px 10px;
             border-radius: 5px;
-            background: rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.12);
+            background: var(--mc-tl-bg);
+            border: 1px solid var(--mc-tl-border);
             box-sizing: border-box;
             display: flex;
             align-items: center;
             overflow-x: hidden;
             overflow-y: visible;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .timelapse-info-panel {
             display: flex;
@@ -530,7 +860,7 @@
             min-height: 0;
             box-sizing: border-box;
             font-size: 12px;
-            color: #222;
+            color: var(--mc-tl-info);
             font-variant-numeric: tabular-nums;
             line-height: 1.25;
         }
@@ -548,14 +878,14 @@
         }
         .timelapse-info-label {
             flex: 0 0 auto;
-            color: #555;
+            color: var(--mc-tl-info-muted);
             font-weight: 500;
             line-height: 1.25;
             margin: 0;
         }
         .timelapse-info-value {
             font-weight: 600;
-            color: #111;
+            color: var(--mc-tl-value);
             line-height: 1.25;
             margin: 0;
         }
@@ -564,7 +894,7 @@
             align-items: center;
             gap: 6px;
             font-size: 12px;
-            color: #111;
+            color: var(--mc-tl-label);
             white-space: nowrap;
         }
         .timelapse-settings input {
@@ -572,9 +902,9 @@
             height: 28px;
             padding: 0 6px;
             border-radius: 4px;
-            border: 1px solid rgba(0,0,0,0.25);
-            background: #fff;
-            color: #111;
+            border: 1px solid var(--mc-input-border);
+            background: var(--mc-input-bg);
+            color: var(--mc-input-text);
             box-sizing: border-box;
         }
 
@@ -844,6 +1174,8 @@
             clip: auto !important;
             transform: none !important;
             margin: 8px 0 !important;
+            font-size: 12px !important;
+            color: var(--mc-muted) !important;
         }
 
         @media (max-width: 600px) {
@@ -925,16 +1257,29 @@
 </head>
 <body>
 
-    <div class="lang-switcher" role="group" id="langSwitcher" aria-label="Language">
-        <button type="button" class="lang-btn" data-lang="nl" aria-label="Nederlands">
-            <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="30" height="20" focusable="false"><path fill="#AE1C28" d="M0 0h9v2H0z"/><path fill="#FFF" d="M0 2h9v2H0z"/><path fill="#21468B" d="M0 4h9v2H0z"/></svg></span>
-        </button>
-        <button type="button" class="lang-btn" data-lang="en" aria-label="English">
-            <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="30" height="15" focusable="false"><clipPath id="langClipGb"><path d="M0 0h60v30H0z"/></clipPath><path fill="#012169" d="M0 0h60v30H0z"/><path stroke="#FFF" stroke-width="6" d="M0 0l60 30M60 0L0 30" clip-path="url(#langClipGb)"/><path stroke="#C8102E" stroke-width="4" d="M0 0l60 30M60 0L0 30" clip-path="url(#langClipGb)"/><path stroke="#FFF" stroke-width="10" d="M30 0v30M0 15h60" clip-path="url(#langClipGb)"/><path stroke="#C8102E" stroke-width="6" d="M30 0v30M0 15h60" clip-path="url(#langClipGb)"/></svg></span>
-        </button>
-        <button type="button" class="lang-btn" data-lang="de" aria-label="Deutsch">
-            <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 3" width="30" height="18" focusable="false"><path fill="#000" d="M0 0h5v1H0z"/><path fill="#D00" d="M0 1h5v1H0z"/><path fill="#FFCE00" d="M0 2h5v1H0z"/></svg></span>
-        </button>
+    <div class="chrome-stack" id="chromeStack">
+        <div class="lang-switcher" role="group" id="langSwitcher" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="nl" aria-label="Nederlands">
+                <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="30" height="20" focusable="false"><path fill="#AE1C28" d="M0 0h9v2H0z"/><path fill="#FFF" d="M0 2h9v2H0z"/><path fill="#21468B" d="M0 4h9v2H0z"/></svg></span>
+            </button>
+            <button type="button" class="lang-btn" data-lang="en" aria-label="English">
+                <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="30" height="15" focusable="false"><clipPath id="langClipGb"><path d="M0 0h60v30H0z"/></clipPath><path fill="#012169" d="M0 0h60v30H0z"/><path stroke="#FFF" stroke-width="6" d="M0 0l60 30M60 0L0 30" clip-path="url(#langClipGb)"/><path stroke="#C8102E" stroke-width="4" d="M0 0l60 30M60 0L0 30" clip-path="url(#langClipGb)"/><path stroke="#FFF" stroke-width="10" d="M30 0v30M0 15h60" clip-path="url(#langClipGb)"/><path stroke="#C8102E" stroke-width="6" d="M30 0v30M0 15h60" clip-path="url(#langClipGb)"/></svg></span>
+            </button>
+            <button type="button" class="lang-btn" data-lang="de" aria-label="Deutsch">
+                <span class="lang-flag" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 3" width="30" height="18" focusable="false"><path fill="#000" d="M0 0h5v1H0z"/><path fill="#D00" d="M0 1h5v1H0z"/><path fill="#FFCE00" d="M0 2h5v1H0z"/></svg></span>
+            </button>
+        </div>
+        <div class="theme-switcher" role="group" id="themeSwitcher" data-i18n-aria="ariaThemeGroup">
+            <button type="button" class="theme-btn" data-theme-pref="light" data-i18n-aria="themeLightAria" aria-pressed="false">
+                <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></span>
+            </button>
+            <button type="button" class="theme-btn" data-theme-pref="auto" data-i18n-aria="themeAutoAria" aria-pressed="false">
+                <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+            </button>
+            <button type="button" class="theme-btn" data-theme-pref="dark" data-i18n-aria="themeDarkAria" aria-pressed="false">
+                <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+            </button>
+        </div>
     </div>
 
     <div class="container">
@@ -968,7 +1313,7 @@
             <div id="micInfo" data-i18n="micNone">Geselecteerde microfoon: geen</div>
         </div>
 
-        <div id="recordingStatus" aria-live="polite" style="margin: 8px 0; font-size: 12px;"></div>
+        <div id="recordingStatus" aria-live="polite"></div>
 
         <div class="controls">
             <div class="button-group">
@@ -1078,6 +1423,10 @@
                 labelDigitalZoom: 'Digitale zoom',
                 ariaZoom: 'Digitale zoom, 1 tot 10 keer',
                 titleZoomSlider: 'Digitale zoom (1×–10×)',
+                ariaThemeGroup: 'Weergavemodus',
+                themeLightAria: 'Lichte modus',
+                themeAutoAria: 'Zelfde als systeem',
+                themeDarkAria: 'Donkere modus',
                 cameraNone: 'Geselecteerde camera: geen',
                 micNone: 'Geselecteerde microfoon: geen',
                 btnSwitchCamera: 'Wissel camera',
@@ -1147,6 +1496,10 @@
                 labelDigitalZoom: 'Digital zoom',
                 ariaZoom: 'Digital zoom, 1 to 10×',
                 titleZoomSlider: 'Digital zoom (1×–10×)',
+                ariaThemeGroup: 'Appearance',
+                themeLightAria: 'Light mode',
+                themeAutoAria: 'Match system',
+                themeDarkAria: 'Dark mode',
                 cameraNone: 'Selected camera: none',
                 micNone: 'Selected microphone: none',
                 btnSwitchCamera: 'Switch camera',
@@ -1216,6 +1569,10 @@
                 labelDigitalZoom: 'Digital zoom',
                 ariaZoom: 'Digitalzoom, 1- bis 10-fach',
                 titleZoomSlider: 'Digitalzoom (1×–10×)',
+                ariaThemeGroup: 'Erscheinungsbild',
+                themeLightAria: 'Heller Modus',
+                themeAutoAria: 'Wie System',
+                themeDarkAria: 'Dunkler Modus',
                 cameraNone: 'Ausgewählte Kamera: keine',
                 micNone: 'Ausgewähltes Mikrofon: keins',
                 btnSwitchCamera: 'Kamera wechseln',
@@ -1378,6 +1735,72 @@
                 b.classList.toggle('active', on);
                 b.setAttribute('aria-pressed', on ? 'true' : 'false');
             });
+
+            if (typeof updateThemeSwitcherUI === 'function') updateThemeSwitcherUI();
+        }
+
+        const THEME_STORAGE_KEY = 'mediacapture-theme';
+        let themePreference = 'auto';
+
+        function getSystemPrefersDark() {
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        function resolveEffectiveTheme() {
+            if (themePreference === 'light') return 'light';
+            if (themePreference === 'dark') return 'dark';
+            return getSystemPrefersDark() ? 'dark' : 'light';
+        }
+
+        function applyEffectiveTheme() {
+            const eff = resolveEffectiveTheme();
+            document.documentElement.classList.remove('mc-theme-light', 'mc-theme-dark');
+            document.documentElement.classList.add(eff === 'dark' ? 'mc-theme-dark' : 'mc-theme-light');
+            document.documentElement.style.colorScheme = eff === 'dark' ? 'dark' : 'light';
+        }
+
+        function updateThemeSwitcherUI() {
+            document.querySelectorAll('.theme-btn[data-theme-pref]').forEach((btn) => {
+                const p = btn.getAttribute('data-theme-pref');
+                const on = p === themePreference;
+                btn.classList.toggle('active', on);
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }
+
+        function setThemePreference(pref) {
+            if (pref !== 'light' && pref !== 'dark' && pref !== 'auto') return;
+            themePreference = pref;
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, pref);
+            } catch (e) {}
+            applyEffectiveTheme();
+            updateThemeSwitcherUI();
+        }
+
+        function initTheme() {
+            let saved = null;
+            try {
+                saved = localStorage.getItem(THEME_STORAGE_KEY);
+            } catch (e) {}
+            if (saved === 'light' || saved === 'dark' || saved === 'auto') {
+                themePreference = saved;
+            } else {
+                themePreference = 'auto';
+            }
+            applyEffectiveTheme();
+            updateThemeSwitcherUI();
+
+            const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+            if (!mq) return;
+            const onSchemeChange = () => {
+                if (themePreference === 'auto') applyEffectiveTheme();
+            };
+            if (typeof mq.addEventListener === 'function') {
+                mq.addEventListener('change', onSchemeChange);
+            } else if (typeof mq.addListener === 'function') {
+                mq.addListener(onSchemeChange);
+            }
         }
 
         /** Common sizes up through 8K; filtered by getCapabilities() (includes 5K / DCI-style heights). */
@@ -4029,8 +4452,14 @@
 
         currentLang = detectInitialLang();
         applyLanguage(currentLang);
+        initTheme();
+
         document.querySelectorAll('.lang-switcher [data-lang]').forEach((btn) => {
             btn.addEventListener('click', () => applyLanguage(btn.getAttribute('data-lang')));
+        });
+
+        document.querySelectorAll('.theme-btn[data-theme-pref]').forEach((btn) => {
+            btn.addEventListener('click', () => setThemePreference(btn.getAttribute('data-theme-pref')));
         });
 
         initializeDevices();
