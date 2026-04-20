@@ -272,6 +272,15 @@
             text-transform: uppercase;
             letter-spacing: 0.03em;
         }
+        .camera-android-usb-hint {
+            margin: 0 0 10px;
+            padding: 0 8px;
+            font-size: 11px;
+            line-height: 1.4;
+            color: var(--mc-label);
+            text-align: center;
+            max-width: 100%;
+        }
         .camera-constraint-field select {
             min-width: 140px;
             max-width: 100%;
@@ -1762,6 +1771,7 @@
                 <select id="cameraFpsSelect" data-i18n-aria="ariaCameraFps"></select>
             </div>
         </div>
+        <p class="camera-android-usb-hint" id="androidUsbCameraHint" data-i18n="androidUsbCameraHint" hidden></p>
 
         <div class="main-workspace">
             <div class="media-column">
@@ -1972,7 +1982,9 @@
                 ariaStopMotionRow: 'Stop motion: frame vastleggen en video exporteren',
                 ariaStopMotionFrame: 'Leg één stop motion frame vast',
                 ariaStopMotionFps: 'Afspeelsnelheid voor geëxporteerde video',
-                ariaStopMotionSave: 'Exporteer stop motion als WebM-video'
+                ariaStopMotionSave: 'Exporteer stop motion als WebM-video',
+                androidUsbCameraHint:
+                    'USB-webcam: niet alle Android-apparaten tonen een externe camera in de browser. Gebruik Chrome, HTTPS en sluit de camera aan vóór of na start; zo nodig tab wisselen of opnieuw verbinden.'
             },
             en: {
                 pageTitle: 'Media capture',
@@ -2038,7 +2050,9 @@
                 ariaStopMotionRow: 'Stop motion: capture frames and export video',
                 ariaStopMotionFrame: 'Capture one stop motion frame',
                 ariaStopMotionFps: 'Playback speed for exported video',
-                ariaStopMotionSave: 'Export stop motion as WebM video'
+                ariaStopMotionSave: 'Export stop motion as WebM video',
+                androidUsbCameraHint:
+                    'USB webcam: not all Android devices expose an external camera to the browser. Use Chrome, HTTPS, and connect the camera before or after starting; try switching tabs or reconnecting if it does not appear.'
             },
             de: {
                 pageTitle: 'Medienaufnahme',
@@ -2104,7 +2118,9 @@
                 ariaStopMotionRow: 'Stop Motion: Bilder aufnehmen und Video exportieren',
                 ariaStopMotionFrame: 'Ein Stop-Motion-Einzelbild aufnehmen',
                 ariaStopMotionFps: 'Wiedergabegeschwindigkeit für exportiertes Video',
-                ariaStopMotionSave: 'Stop Motion als WebM-Video exportieren'
+                ariaStopMotionSave: 'Stop Motion als WebM-Video exportieren',
+                androidUsbCameraHint:
+                    'USB-Webcam: Nicht jedes Android-Gerät listet externe Kameras im Browser. Chrome und HTTPS nutzen, Kamera vor oder nach dem Start anschließen; ggf. Tab wechseln oder neu verbinden.'
             }
         };
 
@@ -2167,6 +2183,12 @@
             }
         }
 
+        function updateAndroidUsbHintVisibility() {
+            const el = document.getElementById('androidUsbCameraHint');
+            if (!el) return;
+            el.hidden = !/Android/i.test(navigator.userAgent || '');
+        }
+
         function applyLanguage(lang) {
             if (lang !== 'nl' && lang !== 'en' && lang !== 'de') lang = 'en';
             currentLang = lang;
@@ -2214,6 +2236,7 @@
             });
 
             if (typeof updateThemeSwitcherUI === 'function') updateThemeSwitcherUI();
+            updateAndroidUsbHintVisibility();
         }
 
         const THEME_STORAGE_KEY = 'mediacapture-theme';
@@ -2531,39 +2554,6 @@
                 videoConstraints.aspectRatio = { ideal: caps.aspectRatio.max };
             }
 
-            // #region agent log
-            fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                body: JSON.stringify({
-                    sessionId: 'c44703',
-                    hypothesisId: 'H2',
-                    location: 'getVideoConstraintsFromControls',
-                    message: 'constraints + caps snippet',
-                    data: {
-                        resVal: resVal || '',
-                        fpsVal: fpsVal || '',
-                        out: {
-                            deviceId: !!videoConstraints.deviceId,
-                            width: videoConstraints.width,
-                            height: videoConstraints.height,
-                            frameRate: videoConstraints.frameRate,
-                            aspectRatio: videoConstraints.aspectRatio
-                        },
-                        caps: caps
-                            ? {
-                                  wMax: caps.width && caps.width.max,
-                                  hMax: caps.height && caps.height.max,
-                                  arMin: caps.aspectRatio && caps.aspectRatio.min,
-                                  arMax: caps.aspectRatio && caps.aspectRatio.max
-                              }
-                            : null
-                    },
-                    timestamp: Date.now()
-                })
-            }).catch(() => {});
-            // #endregion
-
             return videoConstraints;
         }
 
@@ -2764,42 +2754,25 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 cameraList = devices.filter((d) => d.kind === 'videoinput');
                 microphoneList = devices.filter((d) => d.kind === 'audioinput');
-                // #region agent log
-                fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                    body: JSON.stringify({
-                        sessionId: 'c44703',
-                        hypothesisId: 'H5-H7',
-                        location: 'refreshMediaDeviceLists',
-                        message: 'videoinput enumeration',
-                        data: {
-                            nCam: cameraList.length,
-                            cams: cameraList.map((d, i) => ({
-                                i,
-                                idLen: d.deviceId ? String(d.deviceId).length : 0,
-                                hasId: !!(d.deviceId && String(d.deviceId).length > 0),
-                                label: (d.label || '').slice(0, 80)
-                            }))
-                        },
-                        timestamp: Date.now()
-                    })
-                }).catch(() => {});
-                // #endregion
             } catch (e) {
                 console.warn('refreshMediaDeviceLists:', e);
             }
         }
 
-        /** Chrome/Android often omits USB / external videoinput until both built-in facing modes are opened once. */
+        /** Run enumeration probes while few videoinputs are listed (typical phone + USB case). */
+        const ANDROID_ENUM_PROBE_MAX_CAMERAS = 4;
+
+        /** Chrome/Android often omits USB / external videoinput until built-in facing modes (and sometimes a generic stream) are opened once. */
         let lastAndroidExternalCamProbeAt = 0;
+        let androidSessionSwitchProbeDone = false;
 
         async function runAndroidExternalCameraEnumerationProbes(reason) {
             if (!/Android/i.test(navigator.userAgent || '')) return;
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
 
             const now = Date.now();
-            const throttleMs = reason === 'init' ? 0 : 8000;
+            const skipThrottle = reason === 'preOpen' || reason === 'switch';
+            const throttleMs = skipThrottle ? 0 : 8000;
             if (throttleMs > 0 && now - lastAndroidExternalCamProbeAt < throttleMs) return;
             lastAndroidExternalCamProbeAt = now;
 
@@ -2817,9 +2790,11 @@
 
             await tryShortCapture({ facingMode: { ideal: 'user' } });
             await refreshMediaDeviceLists();
-            if (cameraList.length > 2) return;
 
             await tryShortCapture({ facingMode: { ideal: 'environment' } });
+            await refreshMediaDeviceLists();
+
+            await tryShortCapture(true);
             await refreshMediaDeviceLists();
         }
 
@@ -2920,6 +2895,13 @@
                 }
 
                 if (cameraList.length > 0) {
+                    if (
+                        /Android/i.test(navigator.userAgent || '') &&
+                        cameraList.length <= ANDROID_ENUM_PROBE_MAX_CAMERAS
+                    ) {
+                        await runAndroidExternalCameraEnumerationProbes('preOpen');
+                        await refreshMediaDeviceLists();
+                    }
                     const deviceId = cameraList[0].deviceId;
                     currentCameraDeviceId = deviceId;
                     currentCameraIndex = 0;
@@ -2938,9 +2920,6 @@
                         });
                     }
                     await refreshMediaDeviceLists();
-                    if (cameraList.length <= 2) {
-                        await runAndroidExternalCameraEnumerationProbes('init');
-                    }
                     const track = currentStream && currentStream.getVideoTracks()[0];
                     const st = track && track.getSettings ? track.getSettings() : {};
                     if (st.deviceId) {
@@ -3051,49 +3030,6 @@
                 const settings = videoTrack.getSettings();
                 console.log('Active camera settings:', settings);
 
-                // #region agent log
-                fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                    body: JSON.stringify({
-                        sessionId: 'c44703',
-                        hypothesisId: 'H2',
-                        location: 'startCamera:trackSettings',
-                        message: 'track getSettings after open',
-                        data: {
-                            preferMinimalVideo,
-                            w: settings.width,
-                            h: settings.height,
-                            fps: settings.frameRate,
-                            ar: settings.aspectRatio,
-                            deviceIdLen: settings.deviceId ? String(settings.deviceId).length : 0
-                        },
-                        timestamp: Date.now()
-                    })
-                }).catch(() => {});
-                const __dbgOnMeta = () => {
-                    fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                        body: JSON.stringify({
-                            sessionId: 'c44703',
-                            hypothesisId: 'H1-H4',
-                            location: 'startCamera:video loadedmetadata',
-                            message: 'intrinsic vs layout box',
-                            data: {
-                                vw: video.videoWidth,
-                                vh: video.videoHeight,
-                                cw: video.clientWidth,
-                                ch: video.clientHeight,
-                                zt: videoDigitalZoom ? getComputedStyle(videoDigitalZoom).transform : ''
-                            },
-                            timestamp: Date.now()
-                        })
-                    }).catch(() => {});
-                };
-                video.addEventListener('loadedmetadata', __dbgOnMeta, { once: true });
-                // #endregion
-
                 updateDeviceInfo(settings);
 
                 video.srcObject = currentStream;
@@ -3106,24 +3042,6 @@
                 updateCameraConstraintControlsState();
                 applyStopMotionAuxiliaryLocks();
             } catch (err) {
-                // #region agent log
-                fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                    body: JSON.stringify({
-                        sessionId: 'c44703',
-                        hypothesisId: 'H6',
-                        location: 'startCamera:catch',
-                        message: 'getUserMedia or pipeline failed',
-                        data: {
-                            name: err && err.name,
-                            msg: err && String(err.message || '').slice(0, 120),
-                            deviceIdLen: deviceId ? String(deviceId).length : 0
-                        },
-                        timestamp: Date.now()
-                    })
-                }).catch(() => {});
-                // #endregion
                 console.error('Error starting camera: ' + err);
                 setCameraControlsFallbackDefaults();
                 applyStopMotionAuxiliaryLocks();
@@ -3219,14 +3137,57 @@
             }
         }
 
+        /** Prefer explicit resolution/FPS from the constraint dropdowns so the info block matches the top bar; fall back to track getSettings() for default / empty selects. */
+        function resolveCameraInfoMetrics(settingsFromTrack = null) {
+            const trackSettings =
+                settingsFromTrack ||
+                (currentStream &&
+                    currentStream.getVideoTracks()[0] &&
+                    currentStream.getVideoTracks()[0].getSettings &&
+                    currentStream.getVideoTracks()[0].getSettings()) ||
+                null;
+
+            let w;
+            let h;
+            const resVal = cameraResolutionSelect && cameraResolutionSelect.value;
+            if (resVal && String(resVal).toLowerCase().includes('x')) {
+                const parts = String(resVal).toLowerCase().split('x');
+                const pw = parseInt(parts[0], 10);
+                const ph = parseInt(parts[1], 10);
+                if (Number.isFinite(pw) && Number.isFinite(ph)) {
+                    w = pw;
+                    h = ph;
+                }
+            }
+            if (!Number.isFinite(w) && trackSettings) {
+                w = trackSettings.width;
+                h = trackSettings.height;
+            }
+
+            let frameRate;
+            const fpsVal = cameraFpsSelect && cameraFpsSelect.value;
+            if (fpsVal != null && String(fpsVal).length > 0) {
+                const pf = parseFloat(String(fpsVal).replace(',', '.'));
+                if (Number.isFinite(pf)) frameRate = pf;
+            }
+            if (!Number.isFinite(frameRate) && trackSettings) {
+                frameRate = trackSettings.frameRate;
+            }
+
+            return { w, h, frameRate };
+        }
+
         function updateDeviceInfo(settings = null) {
             if (cameraList.length > 0) {
                 let cameraText = t('prefixCamera', {
                     label: cameraList[currentCameraIndex].label || t('unknownDevice')
                 });
-                if (settings) {
-                    cameraText += '\n' + t('deviceLineResolution', { w: settings.width, h: settings.height });
-                    cameraText += '\n' + t('deviceLineFps', { rate: settings.frameRate });
+                const m = resolveCameraInfoMetrics(settings);
+                if (Number.isFinite(m.w) && Number.isFinite(m.h)) {
+                    cameraText += '\n' + t('deviceLineResolution', { w: m.w, h: m.h });
+                }
+                if (Number.isFinite(m.frameRate)) {
+                    cameraText += '\n' + t('deviceLineFps', { rate: m.frameRate });
                 }
                 cameraInfo.textContent = cameraText;
             } else {
@@ -5014,6 +4975,15 @@
 
         switchCameraButton.addEventListener('click', async () => {
             await refreshMediaDeviceLists();
+            if (
+                /Android/i.test(navigator.userAgent || '') &&
+                !androidSessionSwitchProbeDone &&
+                cameraList.length <= ANDROID_ENUM_PROBE_MAX_CAMERAS
+            ) {
+                androidSessionSwitchProbeDone = true;
+                await runAndroidExternalCameraEnumerationProbes('switch');
+                await refreshMediaDeviceLists();
+            }
             if (cameraList.length === 0) return;
             if (cameraList.length === 1) return;
 
@@ -5030,46 +5000,8 @@
             }
             if (!deviceId || String(deviceId).length === 0) {
                 console.warn('Switch camera: missing deviceId after refresh.');
-                // #region agent log
-                fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                    body: JSON.stringify({
-                        sessionId: 'c44703',
-                        hypothesisId: 'H6',
-                        location: 'switchCamera:abort no deviceId',
-                        message: 'chosen slot has empty deviceId',
-                        data: {
-                            currentCameraIndex,
-                            nCam: cameraList.length,
-                            chosenLabel: (chosen && chosen.label) || ''
-                        },
-                        timestamp: Date.now()
-                    })
-                }).catch(() => {});
-                // #endregion
                 return;
             }
-
-            // #region agent log
-            fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                body: JSON.stringify({
-                    sessionId: 'c44703',
-                    hypothesisId: 'H5-H8',
-                    location: 'switchCamera:before startCamera',
-                    message: 'switch target',
-                    data: {
-                        currentCameraIndex,
-                        nCam: cameraList.length,
-                        idLen: String(deviceId).length,
-                        label: (chosen && chosen.label) || ''
-                    },
-                    timestamp: Date.now()
-                })
-            }).catch(() => {});
-            // #endregion
 
             await startCamera(deviceId, {
                 preferMinimalVideo: true,
@@ -5085,25 +5017,6 @@
                 const syncIdx = cameraList.findIndex((d) => d.deviceId === st.deviceId);
                 if (syncIdx >= 0) {
                     currentCameraIndex = syncIdx;
-                } else {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7917/ingest/1a1bce02-2868-4391-9b2c-9ddfa0561db8', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'c44703' },
-                        body: JSON.stringify({
-                            sessionId: 'c44703',
-                            hypothesisId: 'H8',
-                            location: 'switchCamera:syncIdx miss',
-                            message: 'active track deviceId not in enumerateDevices list',
-                            data: {
-                                trackIdLen: String(st.deviceId).length,
-                                nCam: cameraList.length,
-                                listIdLens: cameraList.map((d) => (d.deviceId ? String(d.deviceId).length : 0))
-                            },
-                            timestamp: Date.now()
-                        })
-                    }).catch(() => {});
-                    // #endregion
                 }
             }
         });
@@ -5287,7 +5200,10 @@
         if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
             navigator.mediaDevices.addEventListener('devicechange', async () => {
                 await refreshMediaDeviceLists();
-                if (/Android/i.test(navigator.userAgent || '') && cameraList.length <= 2) {
+                if (
+                    /Android/i.test(navigator.userAgent || '') &&
+                    cameraList.length <= ANDROID_ENUM_PROBE_MAX_CAMERAS
+                ) {
                     await runAndroidExternalCameraEnumerationProbes('devicechange');
                 }
                 const vt0 = currentStream && currentStream.getVideoTracks()[0];
@@ -5315,7 +5231,7 @@
             if (!/Android/i.test(navigator.userAgent || '')) return;
             try {
                 await refreshMediaDeviceLists();
-                if (cameraList.length <= 2) {
+                if (cameraList.length <= ANDROID_ENUM_PROBE_MAX_CAMERAS) {
                     await runAndroidExternalCameraEnumerationProbes('visibility');
                 }
                 const vt = currentStream && currentStream.getVideoTracks()[0];
