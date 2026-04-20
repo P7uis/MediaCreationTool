@@ -229,6 +229,21 @@
             width: 90%;
             max-width: 640px;
         }
+        .main-workspace {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            width: 100%;
+        }
+        .media-column {
+            min-width: 0;
+            width: 100%;
+        }
+        .controls-column {
+            min-width: 0;
+            width: 100%;
+        }
         .camera-constraints-bar {
             display: flex;
             flex-wrap: wrap;
@@ -908,6 +923,89 @@
             box-sizing: border-box;
         }
 
+        @media (min-width: 960px) {
+            .container {
+                max-width: min(92vw, 1200px);
+            }
+            .main-workspace {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            .media-column {
+                flex: 1 1 0;
+            }
+            /* ~same usable width as the original .container (90% of max 640px) so button rows match */
+            .controls-column {
+                flex: 0 0 min(600px, 60vw);
+                max-height: calc(100vh - 88px);
+                max-height: calc(100dvh - 88px);
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                padding-right: 2px;
+            }
+            /* Match default .button-group behavior; gap replaces side margins so wrapped rows stay even */
+            .controls-column .button-group:not(.timelapse-row) {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .controls-column .button-group:not(.timelapse-row) > button {
+                flex: 1;
+                min-width: 0;
+                margin: 0;
+            }
+            /* Same arrangement as vertical: timelapse button + settings bar in one row; interval/frames/fps labels one row */
+            .controls-column .timelapse-row {
+                flex-direction: row;
+                align-items: stretch;
+                flex-wrap: nowrap;
+                gap: 10px;
+            }
+            .controls-column .timelapse-row > button {
+                margin: 0;
+            }
+            .controls-column .timelapse-settings {
+                flex: 3 1 0;
+                min-width: 0;
+                margin: 0;
+                flex-wrap: nowrap;
+                box-sizing: border-box;
+            }
+            .controls-column .timelapse-info-panel {
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+            }
+            .controls-column .timelapse-info-row {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+        }
+
+        @media (max-height: 720px) {
+            .preview-video-wrap .video-digital-zoom video {
+                max-height: min(50vh, 480px);
+            }
+            .preview-row.preview-row--awaiting-camera .preview-video-wrap {
+                min-height: min(40vh, 280px);
+            }
+            .button-group {
+                margin-bottom: 12px;
+            }
+            .controls {
+                margin-bottom: 12px;
+            }
+        }
+
+        @media (max-height: 800px) and (max-width: 959px) {
+            .preview-video-wrap .video-digital-zoom video {
+                max-height: min(55vh, 520px);
+            }
+            .preview-row.preview-row--awaiting-camera .preview-video-wrap {
+                min-height: min(45vh, 320px);
+            }
+        }
+
         /* Comprehensive screen sharing indicator hiding */
         /* Target Chrome's sharing indicator container */
         .chrome-media-toolbar-container,
@@ -1276,26 +1374,29 @@
             </div>
         </div>
 
-        <div class="preview-row preview-row--awaiting-camera" id="previewRow">
-            <div class="preview-video-wrap">
-                <div class="video-digital-zoom" id="videoDigitalZoom">
-                    <video id="video" autoplay muted></video>
+        <div class="main-workspace">
+            <div class="media-column">
+                <div class="preview-row preview-row--awaiting-camera" id="previewRow">
+                    <div class="preview-video-wrap">
+                        <div class="video-digital-zoom" id="videoDigitalZoom">
+                            <video id="video" autoplay muted></video>
+                        </div>
+                    </div>
+                    <div class="zoom-column" id="zoomColumn" data-i18n-title="titleZoomColumn">
+                        <label for="zoomSlider"><span data-i18n="labelDigitalZoom">Digitale zoom</span><span class="zoom-value" id="zoomValueLabel" aria-hidden="true">1×</span></label>
+                        <div class="zoom-slider-slot">
+                            <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" data-i18n-aria="ariaZoom" data-i18n-title="titleZoomSlider">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="device-info">
+                    <div id="cameraInfo" data-i18n="cameraNone">Geselecteerde camera: geen</div>
+                    <div id="micInfo" data-i18n="micNone">Geselecteerde microfoon: geen</div>
                 </div>
             </div>
-            <div class="zoom-column" id="zoomColumn" data-i18n-title="titleZoomColumn">
-                <label for="zoomSlider"><span data-i18n="labelDigitalZoom">Digitale zoom</span><span class="zoom-value" id="zoomValueLabel" aria-hidden="true">1×</span></label>
-                <div class="zoom-slider-slot">
-                    <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" data-i18n-aria="ariaZoom" data-i18n-title="titleZoomSlider">
-                </div>
-            </div>
-        </div>
-
-        <div class="device-info">
-            <div id="cameraInfo" data-i18n="cameraNone">Geselecteerde camera: geen</div>
-            <div id="micInfo" data-i18n="micNone">Geselecteerde microfoon: geen</div>
-        </div>
-
-        <div class="controls">
+            <div class="controls-column">
+                <div class="controls">
             <div class="button-group">
                 <button type="button" id="switchCamera" data-i18n="btnSwitchCamera" data-i18n-aria="ariaSwitchCamera">Wissel camera</button>
                 <button type="button" id="switchMic" data-i18n="btnSwitchMic" data-i18n-aria="ariaSwitchMic">Wissel microfoon</button>
@@ -1342,6 +1443,8 @@
                         <span class="timelapse-info-label" data-i18n="labelTimelapsePlayback">Afspelen</span>
                         <strong id="timelapseInfoPlayback" class="timelapse-info-value">00:00:00 / 00:00:00</strong>
                     </div>
+                </div>
+            </div>
                 </div>
             </div>
         </div>
