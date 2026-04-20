@@ -281,6 +281,27 @@
             text-align: center;
             max-width: 100%;
         }
+        .recording-status-notice {
+            margin: 0 auto 10px;
+            padding: 8px 12px;
+            max-width: 100%;
+            box-sizing: border-box;
+            font-size: 12px;
+            line-height: 1.35;
+            text-align: center;
+            border-radius: 6px;
+            background: var(--mc-card);
+            border: 1px solid var(--mc-card-border);
+            color: var(--mc-fg);
+        }
+        .recording-status-notice.recording-status-notice--error {
+            border-color: #c0392b;
+            color: #b91c1c;
+        }
+        html.mc-theme-dark .recording-status-notice.recording-status-notice--error {
+            color: #fca5a5;
+            border-color: #991b1b;
+        }
         .camera-constraint-field select {
             min-width: 140px;
             max-width: 100%;
@@ -351,7 +372,23 @@
             transform-origin: center center;
             will-change: transform;
         }
+        .preview-video-wrap .video-digital-zoom .sm-lastframe-preview-img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 2px;
+            box-sizing: border-box;
+            border: 1px solid transparent;
+        }
+
         .preview-video-wrap .video-digital-zoom video {
+            position: relative;
+            z-index: 0;
             display: block;
             width: auto;
             height: auto;
@@ -365,40 +402,76 @@
             transition: transform 0.5s ease-in-out;
         }
         .zoom-column {
-            flex: 0 0 52px;
+            flex: 0 0 auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: stretch;
             justify-content: center;
-            gap: 4px;
-            padding: 8px 4px;
-            min-height: 180px;
+            gap: 0;
+            padding: 10px 6px 10px 8px;
+            min-width: 52px;
+            max-width: 132px;
+            min-height: 200px;
             background: var(--mc-card);
             border-radius: 6px;
             border: 1px solid var(--mc-card-border);
             cursor: ns-resize;
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
-        .zoom-column label {
+        .zoom-tracks-row {
+            display: flex;
+            flex-direction: row;
+            flex: 1 1 auto;
+            align-items: stretch;
+            justify-content: center;
+            gap: 8px;
+            min-height: 0;
+            width: 100%;
+        }
+        .zoom-track {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: 56px;
+        }
+        .zoom-column label,
+        .zoom-track label {
             font-size: 11px;
             color: var(--mc-zoom-text);
             writing-mode: horizontal-tb;
-            line-height: 1.2;
+            line-height: 1.25;
+            text-align: center;
+            width: 100%;
+            max-width: 100%;
+            padding: 0 1px 4px;
+            margin: 0;
+            position: relative;
+            z-index: 2;
+            flex: 0 0 auto;
         }
-        .zoom-column .zoom-value {
+        .zoom-column .zoom-value,
+        .zoom-track .zoom-value {
             display: block;
             font-weight: 600;
             font-variant-numeric: tabular-nums;
-            margin-top: 2px;
+            margin-top: 3px;
         }
         .zoom-slider-slot {
-            flex: 1;
-            min-height: 140px;
-            width: 44px;
+            flex: 1 1 auto;
+            min-height: 100px;
+            width: 100%;
+            max-width: 48px;
+            margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: visible;
+            position: relative;
+            z-index: 0;
         }
         .zoom-slider-slot input[type="range"] {
             width: min(220px, 36vh);
@@ -408,6 +481,20 @@
             transform-origin: center center;
             cursor: pointer;
             accent-color: var(--mc-focus);
+        }
+        /* Opacity controls only when overlay is on (JS toggles [hidden]); belt-and-suspenders vs stray layout rules */
+        #stopMotionOverlayOpacityGroup[hidden] {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            flex: 0 0 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            border: 0 !important;
         }
         video {
             display: block;
@@ -954,6 +1041,21 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        .stopmotion-tools-row {
+            align-items: stretch;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        .stopmotion-tools-row button.sm-lastframe-toggle--on {
+            outline: 2px solid var(--mc-accent, #3a7);
+            outline-offset: 1px;
+        }
+        .stopmotion-tools-row button:disabled {
+            opacity: 0.48;
+            cursor: not-allowed;
+            filter: grayscale(0.45);
+        }
         .stopmotion-frame-btn-inner {
             display: flex;
             flex-direction: row;
@@ -1205,15 +1307,31 @@
             }
             .main-workspace {
                 gap: 8px;
+                min-height: 0;
+            }
+            .media-column {
+                flex: 0 1 auto;
+                min-height: 0;
+            }
+            .controls-column {
+                flex: 0 0 auto;
             }
             .preview-video-wrap .video-digital-zoom video {
-                max-height: min(32dvh, calc(100svh - 52vh), calc(100dvh - 52vh), 280px);
+                max-height: min(24dvh, calc(100svh - 58vh), calc(100dvh - 58vh), 220px);
             }
             .preview-row.preview-row--awaiting-camera .preview-video-wrap {
-                min-height: min(18dvh, 110px);
+                min-height: min(16dvh, 96px);
             }
             .zoom-column {
-                min-height: 100px;
+                min-height: 160px;
+                max-width: 124px;
+                padding: 8px 4px;
+            }
+            .zoom-tracks-row {
+                gap: 6px;
+            }
+            .zoom-track {
+                max-width: 50px;
             }
             .zoom-slider-slot {
                 min-height: 72px;
@@ -1240,7 +1358,7 @@
             }
         }
 
-        /* Tight landscape (e.g. phone): slightly narrower controls column */
+        /* Tight landscape (e.g. phone): slightly narrower controls column; cap preview height so controls stay on screen */
         @media (orientation: landscape) and (max-width: 700px) {
             .main-workspace {
                 gap: 10px;
@@ -1248,9 +1366,13 @@
             .controls-column {
                 flex: 0 0 clamp(220px, 48vw, 360px) !important;
             }
+            .preview-video-wrap .video-digital-zoom video {
+                max-height: min(42dvh, calc(100dvh - 100px), calc(100svh - 100px), 320px);
+            }
         }
 
-        @media (max-height: 720px) {
+        /* Do not override stricter phone-portrait preview caps below */
+        @media (max-height: 720px) and (not ((max-width: 768px) and (orientation: portrait))) {
             .preview-video-wrap .video-digital-zoom video {
                 max-height: min(50vh, 480px);
             }
@@ -1265,7 +1387,7 @@
             }
         }
 
-        @media (max-height: 800px) and (max-width: 959px) {
+        @media (max-height: 800px) and (max-width: 959px) and (not ((max-width: 768px) and (orientation: portrait))) {
             .preview-video-wrap .video-digital-zoom video {
                 max-height: min(55vh, 520px);
             }
@@ -1330,10 +1452,10 @@
         div[class*="screen-capture"],
         div[class*="screen-share"],
         div[class*="indicator"],
-        div[role="status"],
+        div[role="status"]:not(#recordingStatusNotice),
         div[role="alert"][class*="sharing"],
-        div[aria-live="polite"],
-        div[aria-live],
+        div[aria-live="polite"]:not(#recordingStatusNotice):not(#timelapseInfoPanel),
+        div[aria-live]:not(#recordingStatusNotice):not(#timelapseInfoPanel),
         div[class*="notification"],
         div[class*="toast"],
         div[class*="snackbar"],
@@ -1548,9 +1670,9 @@
         div[class*="screen-capture"],
         div[class*="screen-share"],
         div[class*="indicator"],
-        div[role="status"],
+        div[role="status"]:not(#recordingStatusNotice),
         div[role="alert"],
-        div[aria-live],
+        div[aria-live]:not(#recordingStatusNotice):not(#timelapseInfoPanel),
         div[class*="notification"],
         div[class*="toast"],
         div[class*="snackbar"],
@@ -1594,9 +1716,9 @@
         div[class*="screen-capture"]:not(.pip-video):not(.pip-container),
         div[class*="screen-share"]:not(.pip-video):not(.pip-container),
         div[class*="indicator"]:not(.pip-video):not(.pip-container),
-        div[role="status"]:not(.pip-video):not(.pip-container),
+        div[role="status"]:not(.pip-video):not(.pip-container):not(#recordingStatusNotice),
         div[role="alert"]:not(.pip-video):not(.pip-container),
-        div[aria-live]:not(.pip-video):not(.pip-container),
+        div[aria-live]:not(.pip-video):not(.pip-container):not(#recordingStatusNotice):not(#timelapseInfoPanel),
         div[class*="notification"]:not(.pip-video):not(.pip-container),
         div[class*="toast"]:not(.pip-video):not(.pip-container),
         div[class*="snackbar"]:not(.pip-video):not(.pip-container),
@@ -1689,7 +1811,7 @@
         div[role="dialog"][class*="sharing"],
         div[role="status"][class*="sharing"],
         div[role="alert"][class*="sharing"],
-        div[aria-live="polite"],
+        div[aria-live="polite"]:not(#recordingStatusNotice):not(#timelapseInfoPanel),
         div[class*="status-message"],
         div[class*="status-banner"] {
             display: none !important;
@@ -1706,7 +1828,7 @@
         }
 
         /* Add global CSS to hide notifications */
-        div[role="status"],
+        div[role="status"]:not(#recordingStatusNotice),
         div[role="alert"],
         div[class*="notification"],
         div[class*="toast"],
@@ -1714,8 +1836,8 @@
         div[class*="sharing"],
         div[style*="fixed"],
         div[style*="notification"],
-        div[aria-live="polite"],
-        div[aria-live="assertive"] {
+        div[aria-live="polite"]:not(#recordingStatusNotice):not(#timelapseInfoPanel),
+        div[aria-live="assertive"]:not(#recordingStatusNotice):not(#timelapseInfoPanel) {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
@@ -1772,19 +1894,31 @@
             </div>
         </div>
         <p class="camera-android-usb-hint" id="androidUsbCameraHint" data-i18n="androidUsbCameraHint" hidden></p>
+        <div id="recordingStatusNotice" class="recording-status-notice" role="status" aria-live="polite" hidden></div>
 
         <div class="main-workspace">
             <div class="media-column">
                 <div class="preview-row preview-row--awaiting-camera" id="previewRow">
                     <div class="preview-video-wrap">
                         <div class="video-digital-zoom" id="videoDigitalZoom">
+                            <img id="stopMotionOverlayImg" class="sm-lastframe-preview-img" alt="" hidden decoding="async" />
                             <video id="video" autoplay muted></video>
                         </div>
                     </div>
                     <div class="zoom-column" id="zoomColumn" data-i18n-title="titleZoomColumn">
-                        <label for="zoomSlider"><span data-i18n="labelDigitalZoom">Digitale zoom</span><span class="zoom-value" id="zoomValueLabel" aria-hidden="true">1×</span></label>
-                        <div class="zoom-slider-slot">
-                            <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" data-i18n-aria="ariaZoom" data-i18n-title="titleZoomSlider">
+                        <div class="zoom-tracks-row">
+                            <div class="zoom-track">
+                                <label for="zoomSlider"><span data-i18n="labelDigitalZoom">Digitale zoom</span><span class="zoom-value" id="zoomValueLabel" aria-hidden="true">1×</span></label>
+                                <div class="zoom-slider-slot">
+                                    <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" data-i18n-aria="ariaZoom" data-i18n-title="titleZoomSlider">
+                                </div>
+                            </div>
+                            <div class="zoom-track zoom-track--opacity" id="stopMotionOverlayOpacityGroup" hidden>
+                                <label for="stopMotionOverlayOpacitySlider"><span data-i18n="labelStopMotionOverlayOpacity">Overlay opacity</span><span class="zoom-value" id="stopMotionOverlayOpacityValue" aria-hidden="true">42%</span></label>
+                                <div class="zoom-slider-slot">
+                                    <input type="range" id="stopMotionOverlayOpacitySlider" min="1" max="100" step="1" value="42" data-i18n-aria="ariaStopMotionOverlayOpacity" data-i18n-title="titleStopMotionOverlayOpacity">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1864,6 +1998,14 @@
                     </span>
                 </button>
             </div>
+            <div class="button-group stopmotion-tools-row" data-i18n-aria="ariaStopMotionTools">
+                <button type="button" id="stopMotionOverlayToggle" data-i18n-aria="ariaStopMotionOverlayLast" aria-pressed="false">
+                    <span data-i18n="btnStopMotionOverlayLast">Overlay last frame</span>
+                </button>
+                <button type="button" id="stopMotionDiscardLastButton" data-i18n-aria="ariaStopMotionDiscardLast" disabled>
+                    <span data-i18n="btnStopMotionDiscardLast">Discard last frame</span>
+                </button>
+            </div>
                 </div>
             </div>
         </div>
@@ -1898,10 +2040,16 @@
         const timelapseInfoPlayback = document.getElementById('timelapseInfoPlayback');
         const timelapseInfoWrap = document.getElementById('timelapseInfoWrap');
         const stopMotionFrameButton = document.getElementById('stopMotionFrameButton');
-        const stopMotionFrameCount = document.getElementById('stopMotionFrameCount');
+        const stopMotionCounterEl = document.getElementById('stopMotionFrameCount');
         const stopMotionExportFpsInput = document.getElementById('stopMotionExportFps');
         const stopMotionSaveButton = document.getElementById('stopMotionSaveButton');
         const stopMotionSaveDuration = document.getElementById('stopMotionSaveDuration');
+        const stopMotionOverlayImg = document.getElementById('stopMotionOverlayImg');
+        const stopMotionOverlayToggle = document.getElementById('stopMotionOverlayToggle');
+        const stopMotionDiscardLastButton = document.getElementById('stopMotionDiscardLastButton');
+        const stopMotionOverlayOpacityGroup = document.getElementById('stopMotionOverlayOpacityGroup');
+        const stopMotionOverlayOpacitySlider = document.getElementById('stopMotionOverlayOpacitySlider');
+        const stopMotionOverlayOpacityValue = document.getElementById('stopMotionOverlayOpacityValue');
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
@@ -1976,6 +2124,15 @@
                 deviceLineFps: 'Beeldsnelheid: {rate} fps',
                 micWithLabel: 'Geselecteerde microfoon: {label}',
                 errNoCameraStream: 'Geen actieve camerastream.',
+                recordingWebmTypeDesc: 'WebM-video',
+                recordingAudioWebmTypeDesc: 'WebM-audio',
+                recordingSavePickerHint:
+                    'Kies waar de opname wordt opgeslagen. Data wordt tijdens opnemen naar schijf geschreven om geheugen te sparen (Chrome/Edge, HTTPS).',
+                recordingSaveCancelled: 'Opslaan geannuleerd; opname niet gestart.',
+                recordingDiskWriteFailed: 'Schrijven naar bestand mislukt. Controleer vrije ruimte en machtigingen.',
+                recordingSavedToDisk: 'Opname opgeslagen op de gekozen locatie.',
+                recordingMemoryModeHint:
+                    'Langere opnames gebruiken veel geheugen. Gebruik Chrome of Edge (HTTPS) om rechtstreeks naar een bestand op te nemen.',
                 btnStopMotionFrame: 'Stop motion frame',
                 btnStopMotionSave: 'Stop motion opslaan',
                 labelStopMotionExportFps: 'Export fps',
@@ -1983,6 +2140,14 @@
                 ariaStopMotionFrame: 'Leg één stop motion frame vast',
                 ariaStopMotionFps: 'Afspeelsnelheid voor geëxporteerde video',
                 ariaStopMotionSave: 'Exporteer stop motion als WebM-video',
+                ariaStopMotionTools: 'Stop motion: overlay en laatste frame verwijderen',
+                btnStopMotionOverlayLast: 'Overlay laatste frame',
+                ariaStopMotionOverlayLast: 'Schakel halfdoorzichtige overlay van het laatste vastgelegde frame in of uit',
+                btnStopMotionDiscardLast: 'Laatste frame weg',
+                ariaStopMotionDiscardLast: 'Verwijder het laatste stop motion frame',
+                labelStopMotionOverlayOpacity: 'Overlay-dekking',
+                ariaStopMotionOverlayOpacity: 'Dekking van het laatste-frame-overlay, 1% tot 100% ondoorzichtig',
+                titleStopMotionOverlayOpacity: 'Overlay-dekking (1–100%)',
                 androidUsbCameraHint:
                     'USB-webcam: niet alle Android-apparaten tonen een externe camera in de browser. Gebruik Chrome, HTTPS en sluit de camera aan vóór of na start; zo nodig tab wisselen of opnieuw verbinden.'
             },
@@ -2044,6 +2209,15 @@
                 deviceLineFps: 'Frame rate: {rate} fps',
                 micWithLabel: 'Selected microphone: {label}',
                 errNoCameraStream: 'No active camera stream.',
+                recordingWebmTypeDesc: 'WebM video',
+                recordingAudioWebmTypeDesc: 'WebM audio',
+                recordingSavePickerHint:
+                    'Choose where to save the recording. Data is written to disk while recording to save memory (Chrome/Edge, HTTPS).',
+                recordingSaveCancelled: 'Save cancelled; recording did not start.',
+                recordingDiskWriteFailed: 'Writing to file failed. Check free space and permissions.',
+                recordingSavedToDisk: 'Recording saved to the file you chose.',
+                recordingMemoryModeHint:
+                    'Long recordings use more RAM. Use Chrome or Edge over HTTPS to record directly to a file.',
                 btnStopMotionFrame: 'Stop motion frame',
                 btnStopMotionSave: 'Save stop motion',
                 labelStopMotionExportFps: 'Export fps',
@@ -2051,6 +2225,14 @@
                 ariaStopMotionFrame: 'Capture one stop motion frame',
                 ariaStopMotionFps: 'Playback speed for exported video',
                 ariaStopMotionSave: 'Export stop motion as WebM video',
+                ariaStopMotionTools: 'Stop motion: overlay and discard last frame',
+                btnStopMotionOverlayLast: 'Overlay last frame',
+                ariaStopMotionOverlayLast: 'Toggle a semi-transparent overlay of the last captured frame',
+                btnStopMotionDiscardLast: 'Discard last frame',
+                ariaStopMotionDiscardLast: 'Remove the last captured stop motion frame',
+                labelStopMotionOverlayOpacity: 'Overlay opacity',
+                ariaStopMotionOverlayOpacity: 'Last-frame overlay opacity from 1% (faint) to 100% (opaque)',
+                titleStopMotionOverlayOpacity: 'Overlay opacity (1–100%)',
                 androidUsbCameraHint:
                     'USB webcam: not all Android devices expose an external camera to the browser. Use Chrome, HTTPS, and connect the camera before or after starting; try switching tabs or reconnecting if it does not appear.'
             },
@@ -2112,6 +2294,15 @@
                 deviceLineFps: 'Bildrate: {rate} fps',
                 micWithLabel: 'Ausgewähltes Mikrofon: {label}',
                 errNoCameraStream: 'Kein aktiver Kamerastream.',
+                recordingWebmTypeDesc: 'WebM-Video',
+                recordingAudioWebmTypeDesc: 'WebM-Audio',
+                recordingSavePickerHint:
+                    'Wählen Sie, wo die Aufnahme gespeichert wird. Daten werden während der Aufnahme auf die Festplatte geschrieben, um RAM zu sparen (Chrome/Edge, HTTPS).',
+                recordingSaveCancelled: 'Speichern abgebrochen; Aufnahme nicht gestartet.',
+                recordingDiskWriteFailed: 'Schreiben in die Datei fehlgeschlagen. Prüfen Sie Speicherplatz und Berechtigungen.',
+                recordingSavedToDisk: 'Aufnahme am gewählten Ort gespeichert.',
+                recordingMemoryModeHint:
+                    'Lange Aufnahmen nutzen viel RAM. Nutzen Sie Chrome oder Edge über HTTPS, um direkt in eine Datei aufzunehmen.',
                 btnStopMotionFrame: 'Stop-Motion-Einzelbild',
                 btnStopMotionSave: 'Stop-Motion speichern',
                 labelStopMotionExportFps: 'Export fps',
@@ -2119,6 +2310,14 @@
                 ariaStopMotionFrame: 'Ein Stop-Motion-Einzelbild aufnehmen',
                 ariaStopMotionFps: 'Wiedergabegeschwindigkeit für exportiertes Video',
                 ariaStopMotionSave: 'Stop Motion als WebM-Video exportieren',
+                ariaStopMotionTools: 'Stop Motion: Overlay und letztes Bild verwerfen',
+                btnStopMotionOverlayLast: 'Letztes Bild einblenden',
+                ariaStopMotionOverlayLast: 'Halbtransparentes Overlay des zuletzt aufgenommenen Einzelbilds ein- oder ausschalten',
+                btnStopMotionDiscardLast: 'Letztes Bild verwerfen',
+                ariaStopMotionDiscardLast: 'Das zuletzt aufgenommene Stop-Motion-Bild entfernen',
+                labelStopMotionOverlayOpacity: 'Overlay-Deckkraft',
+                ariaStopMotionOverlayOpacity: 'Deckkraft des letzten Einzelbild-Overlays von 1 % bis 100 % undurchsichtig',
+                titleStopMotionOverlayOpacity: 'Overlay-Deckkraft (1–100 %)',
                 androidUsbCameraHint:
                     'USB-Webcam: Nicht jedes Android-Gerät listet externe Kameras im Browser. Chrome und HTTPS nutzen, Kamera vor oder nach dem Start anschließen; ggf. Tab wechseln oder neu verbinden.'
             }
@@ -2217,6 +2416,10 @@
 
             syncRecordingButtonLabels();
             if (typeof updateStopMotionUi === 'function') updateStopMotionUi();
+            if (typeof syncStopMotionOverlayToggleVisual === 'function') syncStopMotionOverlayToggleVisual();
+            if (typeof syncStopMotionOverlayOpacityGroupVisibility === 'function') {
+                syncStopMotionOverlayOpacityGroupVisibility();
+            }
             if (typeof updateMuteToggleUI === 'function') updateMuteToggleUI();
             if (typeof updateMirrorToggleUI === 'function') updateMirrorToggleUI();
             try {
@@ -2398,7 +2601,7 @@
             const lock =
                 cameraRecordingActive ||
                 timelapseCapturing ||
-                stopMotionFrames.length > 0 ||
+                getStopMotionFrameCount() > 0 ||
                 stopMotionEncoding;
             if (cameraResolutionSelect) {
                 cameraResolutionSelect.disabled = lock || cameraList.length === 0;
@@ -2560,14 +2763,14 @@
         async function restartCameraPreviewForConstraints() {
             if (!currentCameraDeviceId) return;
             if (cameraRecordingActive || timelapseCapturing) return;
-            if (stopMotionFrames.length > 0 || stopMotionEncoding) return;
+            if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
             await startCamera(currentCameraDeviceId);
         }
 
         /** Same negotiation as changing resolution: reopen with getVideoConstraintsFromControls (not device-only). */
         async function refineCameraStreamToMatchControls() {
             if (!currentCameraDeviceId || cameraRecordingActive || timelapseCapturing) return;
-            if (stopMotionFrames.length > 0 || stopMotionEncoding) return;
+            if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
             if (!currentStream) return;
             try {
                 await startCamera(currentCameraDeviceId);
@@ -2601,6 +2804,9 @@
         let suppressAudioDownload = false;
         let audioRecorder = null;
         let audioChunks = [];
+        let audioRecordingDiskMode = false;
+        let audioRecordingWritable = null;
+        let audioRecordingDiskWriteQueue = Promise.resolve();
         let audioRecordStream = null;
         let screenMediaRecorder = null;
         let screenRecordedChunks = [];
@@ -2612,7 +2818,8 @@
         // Timelapse state
         let timelapseCapturing = false;
         let timelapseCaptureTimer = null;
-        let timelapseFrames = [];
+        let timelapseFrameStore = null;
+        let timelapseExportInProgress = false;
         let timelapseRecordStartTime = 0;
         let timelapseRecordClockTimer = null;
         /** Snapshot of settings when a timelapse session starts (denominators while capturing / encoding). */
@@ -2624,8 +2831,10 @@
             playbackPlanSec: 20
         };
 
-        let stopMotionFrames = [];
+        let stopMotionFrameStore = null;
         let stopMotionEncoding = false;
+        let stopMotionLastFrameOverlayEnabled = false;
+        let stopMotionOverlayObjectUrl = null;
 
         // Camera-recording pipeline (canvas for mirroring + WebAudio gain for mute).
         let cameraRecordingCanvas = null;
@@ -2668,6 +2877,468 @@
         let streamDrawRequestId = null;
         let streamRecordingActive = false;
 
+        /** Timesliced MediaRecorder; smaller slices keep in-flight encoded blobs smaller before OPFS/disk write. */
+        const RECORDING_TIMESLICE_MS = 500;
+        let recordingStatusNoticeTimer = null;
+        let recordingMemoryHintShown = false;
+
+        let cameraRecordingDiskMode = false;
+        let cameraRecordingWritable = null;
+        let cameraRecordingDiskWriteQueue = Promise.resolve();
+
+        let screenRecordingDiskMode = false;
+        let screenRecordingWritable = null;
+        let screenRecordingDiskWriteQueue = Promise.resolve();
+
+        let streamCaptureRecordingDiskMode = false;
+        let streamCaptureRecordingWritable = null;
+        let streamCaptureRecordingDiskWriteQueue = Promise.resolve();
+
+        let cameraRecordingOpfsFileHandle = null;
+        let cameraRecordingOpfsDispose = null;
+        let screenRecordingOpfsFileHandle = null;
+        let screenRecordingOpfsDispose = null;
+        let audioRecordingOpfsFileHandle = null;
+        let audioRecordingOpfsDispose = null;
+        let streamCaptureRecordingOpfsFileHandle = null;
+        let streamCaptureRecordingOpfsDispose = null;
+
+        function showRecordingStatusNotice(message, isError) {
+            const el = document.getElementById('recordingStatusNotice');
+            if (!el || !message) return;
+            el.textContent = message;
+            el.hidden = false;
+            el.classList.toggle('recording-status-notice--error', !!isError);
+            if (recordingStatusNoticeTimer) clearTimeout(recordingStatusNoticeTimer);
+            recordingStatusNoticeTimer = setTimeout(() => {
+                el.hidden = true;
+                el.textContent = '';
+                el.classList.remove('recording-status-notice--error');
+                recordingStatusNoticeTimer = null;
+            }, 8000);
+        }
+
+        async function finalizeOpfsRecordingToDownload(fileHandle, downloadName, dispose) {
+            try {
+                if (!fileHandle) return;
+                const file = await fileHandle.getFile();
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = downloadName;
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.warn('OPFS recording finalize download:', e);
+            } finally {
+                try {
+                    if (dispose) await dispose();
+                } catch (e) {}
+            }
+        }
+
+        /**
+         * No save-location picker: stream MediaRecorder chunks to OPFS when available so RAM
+         * does not grow with the full recording; then trigger a normal download (browser default folder).
+         * Falls back to in-memory chunk buffering if OPFS is unavailable.
+         */
+        async function openRecordingDiskSink(suggestedName, mediaKind = 'video') {
+            void mediaKind;
+            try {
+                if (!navigator.storage || typeof navigator.storage.getDirectory !== 'function') {
+                    return { mode: 'memory' };
+                }
+                const root = await navigator.storage.getDirectory();
+                const slug = String(suggestedName || 'recording.webm').replace(/[^\w.-]+/g, '_');
+                const safeSlug = slug.slice(Math.max(0, slug.length - 96));
+                const fname = `mcwb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeSlug}`;
+                const fh = await root.getFileHandle(fname, { create: true });
+                const writable = await fh.createWritable({ keepExistingData: false });
+                const opfsDispose = async () => {
+                    try {
+                        await root.removeEntry(fname);
+                    } catch (e) {}
+                };
+                return { mode: 'disk', writable, fileHandle: fh, opfsDispose };
+            } catch (e) {
+                console.warn('OPFS recording sink unavailable, using RAM:', e);
+                return { mode: 'memory' };
+            }
+        }
+
+        /** Serialized writes for one-off exports (stop-motion, timelapse). */
+        function createDiskWriteAppender(writable) {
+            let chain = Promise.resolve();
+            return {
+                push(blob) {
+                    if (!writable || !blob || !blob.size) return;
+                    chain = chain.catch(() => {}).then(() => writable.write(blob));
+                },
+                flush() {
+                    return chain.catch(() => {});
+                }
+            };
+        }
+
+        const MC_FRAME_WEBP_QUALITY = 0.76;
+        const MC_FRAME_JPEG_QUALITY = 0.8;
+        const MC_FRAME_IDB_NAME = 'MediaCreationToolFrames';
+        const MC_FRAME_IDB_VER = 1;
+        const MC_FRAME_IDB_STORE = 'f';
+
+        function getTimelapseFrameCount() {
+            return timelapseFrameStore ? timelapseFrameStore.getCount() : 0;
+        }
+
+        function getStopMotionFrameCount() {
+            return stopMotionFrameStore ? stopMotionFrameStore.getCount() : 0;
+        }
+
+        async function canvasToStillImageBlob(canvas) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob(
+                    (b) => (b && b.size ? resolve(b) : reject(new Error('empty webp'))),
+                    'image/webp',
+                    MC_FRAME_WEBP_QUALITY
+                );
+            }).catch(() => {
+                return new Promise((resolve, reject) => {
+                    canvas.toBlob(
+                        (b) => (b && b.size ? resolve(b) : reject(new Error('empty jpeg'))),
+                        'image/jpeg',
+                        MC_FRAME_JPEG_QUALITY
+                    );
+                });
+            });
+        }
+
+        function openMcFrameIdb() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(MC_FRAME_IDB_NAME, MC_FRAME_IDB_VER);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    if (!db.objectStoreNames.contains(MC_FRAME_IDB_STORE)) {
+                        db.createObjectStore(MC_FRAME_IDB_STORE);
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function idbPutFrame(db, key, blob) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(MC_FRAME_IDB_STORE, 'readwrite');
+                tx.objectStore(MC_FRAME_IDB_STORE).put(blob, key);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+                tx.onabort = () => reject(tx.error);
+            });
+        }
+
+        async function idbGetFrame(db, key) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(MC_FRAME_IDB_STORE, 'readonly');
+                const r = tx.objectStore(MC_FRAME_IDB_STORE).get(key);
+                r.onsuccess = () => resolve(r.result || null);
+                r.onerror = () => reject(r.error);
+            });
+        }
+
+        async function drawStoredFrameToCanvas(store, index, outCtx, dw, dh) {
+            if (store.backend === 'memory') {
+                const bmp = store._bitmaps[index];
+                outCtx.drawImage(bmp, 0, 0, dw, dh);
+                return;
+            }
+            const blob = await store.readBlob(index);
+            const bmp = await createImageBitmap(blob);
+            try {
+                outCtx.drawImage(bmp, 0, 0, dw, dh);
+            } finally {
+                try {
+                    bmp.close();
+                } catch (e) {}
+            }
+        }
+
+        async function tryCreateOpfsFrameStore(namespace) {
+            if (!navigator.storage || typeof navigator.storage.getDirectory !== 'function') {
+                return null;
+            }
+            const root = await navigator.storage.getDirectory();
+            const dirName = `mc-${namespace}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+            const dir = await root.getDirectoryHandle(dirName, { create: true });
+            let appendChain = Promise.resolve();
+            let count = 0;
+            let capW = 0;
+            let capH = 0;
+            let ext = 'webp';
+
+            const fileName = (i) => `f_${String(i).padStart(7, '0')}.${ext}`;
+
+            return {
+                backend: 'opfs',
+                getCount: () => count,
+                getCanvasDimensions: () => ({ width: capW || 1280, height: capH || 720 }),
+                async appendFromCanvas(canvas) {
+                    const blob = await canvasToStillImageBlob(canvas);
+                    if (!capW) {
+                        capW = canvas.width;
+                        capH = canvas.height;
+                        ext = blob.type.includes('jpeg') ? 'jpg' : 'webp';
+                    }
+                    const idx = count;
+                    appendChain = appendChain.then(async () => {
+                        const fh = await dir.getFileHandle(fileName(idx), { create: true });
+                        const ws = await fh.createWritable();
+                        await ws.write(blob);
+                        await ws.close();
+                    });
+                    await appendChain;
+                    count += 1;
+                },
+                async readBlob(i) {
+                    const fh = await dir.getFileHandle(fileName(i));
+                    return fh.getFile();
+                },
+                async removeLastFrame() {
+                    let removed = false;
+                    appendChain = appendChain.then(async () => {
+                        if (count <= 0) return;
+                        const last = count - 1;
+                        try {
+                            await dir.removeEntry(fileName(last));
+                            count -= 1;
+                            removed = true;
+                            if (count <= 0) {
+                                capW = 0;
+                                capH = 0;
+                                ext = 'webp';
+                            }
+                        } catch (e) {
+                            removed = false;
+                        }
+                    });
+                    await appendChain;
+                    return removed;
+                },
+                flush: () => appendChain.catch(() => {}),
+                async clear() {
+                    await appendChain.catch(() => {});
+                    try {
+                        await root.removeEntry(dirName, { recursive: true });
+                    } catch (e) {
+                        try {
+                            for await (const [entryName] of dir.entries()) {
+                                try {
+                                    await dir.removeEntry(entryName, { recursive: true });
+                                } catch (e2) {}
+                            }
+                            await root.removeEntry(dirName, { recursive: true });
+                        } catch (e3) {}
+                    }
+                    appendChain = Promise.resolve();
+                    count = 0;
+                    capW = 0;
+                    capH = 0;
+                }
+            };
+        }
+
+        async function tryCreateIdbFrameStore(namespace) {
+            let db;
+            try {
+                db = await openMcFrameIdb();
+            } catch (e) {
+                return null;
+            }
+            const sessionKey = `mc-${namespace}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+            let appendChain = Promise.resolve();
+            let count = 0;
+            let capW = 0;
+            let capH = 0;
+
+            const keyAt = (i) => `${sessionKey}:${String(i).padStart(7, '0')}`;
+
+            return {
+                backend: 'idb',
+                getCount: () => count,
+                getCanvasDimensions: () => ({ width: capW || 1280, height: capH || 720 }),
+                async appendFromCanvas(canvas) {
+                    const blob = await canvasToStillImageBlob(canvas);
+                    if (!capW) {
+                        capW = canvas.width;
+                        capH = canvas.height;
+                    }
+                    const idx = count;
+                    const k = keyAt(idx);
+                    appendChain = appendChain.then(() => idbPutFrame(db, k, blob));
+                    await appendChain;
+                    count += 1;
+                },
+                async readBlob(i) {
+                    const blob = await idbGetFrame(db, keyAt(i));
+                    if (!blob) throw new Error('missing idb frame');
+                    return blob;
+                },
+                async removeLastFrame() {
+                    let removed = false;
+                    appendChain = appendChain.then(async () => {
+                        if (count <= 0) return;
+                        const last = count - 1;
+                        const k = keyAt(last);
+                        try {
+                            await new Promise((resolve, reject) => {
+                                const tx = db.transaction(MC_FRAME_IDB_STORE, 'readwrite');
+                                tx.objectStore(MC_FRAME_IDB_STORE).delete(k);
+                                tx.oncomplete = () => resolve();
+                                tx.onerror = () => reject(tx.error);
+                                tx.onabort = () => reject(tx.error);
+                            });
+                            count -= 1;
+                            removed = true;
+                            if (count <= 0) {
+                                capW = 0;
+                                capH = 0;
+                            }
+                        } catch (e) {
+                            removed = false;
+                        }
+                    });
+                    await appendChain;
+                    return removed;
+                },
+                flush: () => appendChain.catch(() => {}),
+                async clear() {
+                    await appendChain.catch(() => {});
+                    const n = count;
+                    for (let i = 0; i < n; i++) {
+                        try {
+                            const k = keyAt(i);
+                            await new Promise((resolve, reject) => {
+                                const tx = db.transaction(MC_FRAME_IDB_STORE, 'readwrite');
+                                tx.objectStore(MC_FRAME_IDB_STORE).delete(k);
+                                tx.oncomplete = () => resolve();
+                                tx.onerror = () => reject(tx.error);
+                                tx.onabort = () => reject(tx.error);
+                            });
+                        } catch (e) {}
+                    }
+                    appendChain = Promise.resolve();
+                    count = 0;
+                    capW = 0;
+                    capH = 0;
+                }
+            };
+        }
+
+        function createMemoryFrameStore() {
+            const bitmaps = [];
+            return {
+                backend: 'memory',
+                _bitmaps: bitmaps,
+                getCount: () => bitmaps.length,
+                getCanvasDimensions: () =>
+                    bitmaps[0]
+                        ? { width: bitmaps[0].width, height: bitmaps[0].height }
+                        : { width: 1280, height: 720 },
+                async appendFromCanvas(canvas) {
+                    bitmaps.push(await createImageBitmap(canvas));
+                },
+                async readBlob(i) {
+                    const b = bitmaps[i];
+                    if (!b) throw new Error('missing memory frame');
+                    const c = document.createElement('canvas');
+                    c.width = b.width;
+                    c.height = b.height;
+                    c.getContext('2d').drawImage(b, 0, 0);
+                    return canvasToStillImageBlob(c);
+                },
+                async removeLastFrame() {
+                    if (bitmaps.length === 0) return false;
+                    const b = bitmaps.pop();
+                    try {
+                        b.close();
+                    } catch (e) {}
+                    return true;
+                },
+                flush: () => Promise.resolve(),
+                async clear() {
+                    bitmaps.forEach((b) => {
+                        try {
+                            b.close();
+                        } catch (e) {}
+                    });
+                    bitmaps.length = 0;
+                }
+            };
+        }
+
+        async function createFrameStore(namespace) {
+            try {
+                const opfs = await tryCreateOpfsFrameStore(namespace);
+                if (opfs) return opfs;
+            } catch (e) {
+                console.warn('OPFS frame store unavailable:', e);
+            }
+            try {
+                const idb = await tryCreateIdbFrameStore(namespace);
+                if (idb) return idb;
+            } catch (e) {
+                console.warn('IndexedDB frame store unavailable:', e);
+            }
+            console.warn('Frame store: using in-memory ImageBitmaps (higher RAM).');
+            return createMemoryFrameStore();
+        }
+
+        async function closeRecordingWritableQuietly(writable) {
+            if (!writable) return;
+            try {
+                await writable.close();
+            } catch (e) {
+                try {
+                    await writable.abort();
+                } catch (e2) {}
+            }
+        }
+
+        function queueCameraDiskWrite(blob) {
+            if (!cameraRecordingWritable || !blob || !blob.size) return;
+            cameraRecordingDiskWriteQueue = cameraRecordingDiskWriteQueue.catch(() => {}).then(() =>
+                cameraRecordingWritable.write(blob)
+            );
+        }
+
+        function queueScreenDiskWrite(blob) {
+            if (!screenRecordingWritable || !blob || !blob.size) return;
+            screenRecordingDiskWriteQueue = screenRecordingDiskWriteQueue.catch(() => {}).then(() =>
+                screenRecordingWritable.write(blob)
+            );
+        }
+
+        function queueStreamCaptureDiskWrite(blob) {
+            if (!streamCaptureRecordingWritable || !blob || !blob.size) return;
+            streamCaptureRecordingDiskWriteQueue = streamCaptureRecordingDiskWriteQueue.catch(() => {}).then(() =>
+                streamCaptureRecordingWritable.write(blob)
+            );
+        }
+
+        function queueAudioDiskWrite(blob) {
+            if (!audioRecordingWritable || !blob || !blob.size) return;
+            audioRecordingDiskWriteQueue = audioRecordingDiskWriteQueue.catch(() => {}).then(() =>
+                audioRecordingWritable.write(blob)
+            );
+        }
+
+        function maybeShowRecordingMemoryHint() {
+            if (recordingMemoryHintShown) return;
+            recordingMemoryHintShown = true;
+            showRecordingStatusNotice(t('recordingMemoryModeHint'), false);
+        }
+
         function getPrimaryRecordingActiveButton() {
             if (cameraRecordingActive) return recordButton;
             if (screenMediaRecorder && screenMediaRecorder.state === 'recording') {
@@ -2683,7 +3354,7 @@
         }
 
         function stopMotionLockActive() {
-            return stopMotionFrames.length > 0 || stopMotionEncoding;
+            return getStopMotionFrameCount() > 0 || stopMotionEncoding;
         }
 
         function getStopMotionExportFps() {
@@ -2718,12 +3389,20 @@
                 stopMotionFrameButton.disabled = enc || !currentStream;
             }
             if (stopMotionSaveButton) {
-                stopMotionSaveButton.disabled = enc || stopMotionFrames.length === 0;
+                stopMotionSaveButton.disabled = enc || getStopMotionFrameCount() === 0;
             }
             if (stopMotionExportFpsInput) {
                 stopMotionExportFpsInput.disabled = enc;
             }
+            const smFrames = getStopMotionFrameCount();
+            if (stopMotionOverlayToggle) {
+                stopMotionOverlayToggle.disabled = enc || !currentStream || smFrames === 0;
+            }
+            if (stopMotionDiscardLastButton) {
+                stopMotionDiscardLastButton.disabled = enc || smFrames === 0;
+            }
 
+            syncStopMotionOverlayOpacityGroupVisibility();
             updateCameraConstraintControlsState();
         }
 
@@ -3050,6 +3729,96 @@
 
         function updateMirroring() {
             video.style.transform = mirrorFeed ? 'scaleX(-1)' : 'scaleX(1)';
+            void refreshStopMotionOverlayPreview();
+        }
+
+        function syncStopMotionOverlayToggleVisual() {
+            if (!stopMotionOverlayToggle) return;
+            stopMotionOverlayToggle.setAttribute('aria-pressed', stopMotionLastFrameOverlayEnabled ? 'true' : 'false');
+            stopMotionOverlayToggle.classList.toggle('sm-lastframe-toggle--on', stopMotionLastFrameOverlayEnabled);
+        }
+
+        function syncStopMotionOverlayOpacityGroupVisibility() {
+            if (!stopMotionOverlayOpacityGroup) return;
+            const show = !!stopMotionLastFrameOverlayEnabled;
+            stopMotionOverlayOpacityGroup.hidden = !show;
+            stopMotionOverlayOpacityGroup.setAttribute('aria-hidden', show ? 'false' : 'true');
+            if (stopMotionOverlayOpacitySlider) {
+                stopMotionOverlayOpacitySlider.disabled = !show || stopMotionEncoding;
+                stopMotionOverlayOpacitySlider.tabIndex = show ? 0 : -1;
+            }
+        }
+
+        async function refreshStopMotionOverlayPreview() {
+            if (!stopMotionOverlayImg) return;
+            if (stopMotionOverlayObjectUrl) {
+                try {
+                    URL.revokeObjectURL(stopMotionOverlayObjectUrl);
+                } catch (e) {}
+                stopMotionOverlayObjectUrl = null;
+            }
+            stopMotionOverlayImg.removeAttribute('src');
+            stopMotionOverlayImg.hidden = true;
+            if (
+                !stopMotionLastFrameOverlayEnabled ||
+                !stopMotionFrameStore ||
+                getStopMotionFrameCount() === 0
+            ) {
+                syncStopMotionOverlayOpacityGroupVisibility();
+                return;
+            }
+            try {
+                await stopMotionFrameStore.flush();
+                if (!stopMotionLastFrameOverlayEnabled) {
+                    syncStopMotionOverlayOpacityGroupVisibility();
+                    return;
+                }
+                const n = getStopMotionFrameCount();
+                if (n < 1) {
+                    syncStopMotionOverlayOpacityGroupVisibility();
+                    return;
+                }
+                const idx = n - 1;
+                const blob = await stopMotionFrameStore.readBlob(idx);
+                if (!stopMotionLastFrameOverlayEnabled) {
+                    syncStopMotionOverlayOpacityGroupVisibility();
+                    return;
+                }
+                const url = URL.createObjectURL(blob);
+                stopMotionOverlayObjectUrl = url;
+                stopMotionOverlayImg.src = url;
+                stopMotionOverlayImg.hidden = false;
+                stopMotionOverlayImg.style.transform = mirrorFeed ? 'scaleX(-1)' : 'scaleX(1)';
+                applyStopMotionOverlayOpacityFromSlider();
+            } catch (e) {
+                console.warn('Stop motion overlay preview:', e);
+            }
+        }
+
+        function applyStopMotionOverlayOpacityFromSlider() {
+            if (!stopMotionOverlayOpacitySlider || !stopMotionOverlayImg) return;
+            if (stopMotionOverlayOpacityGroup && stopMotionOverlayOpacityGroup.hidden) return;
+            let p = parseInt(stopMotionOverlayOpacitySlider.value, 10);
+            if (Number.isNaN(p)) p = 42;
+            p = Math.min(100, Math.max(1, p));
+            stopMotionOverlayOpacitySlider.value = String(p);
+            stopMotionOverlayImg.style.opacity = String(p / 100);
+            if (stopMotionOverlayOpacityValue) {
+                stopMotionOverlayOpacityValue.textContent = p + '%';
+            }
+        }
+
+        async function discardStopMotionLastFrame() {
+            if (stopMotionEncoding || !stopMotionFrameStore || getStopMotionFrameCount() === 0) return;
+            try {
+                const ok = await stopMotionFrameStore.removeLastFrame();
+                if (!ok) return;
+            } catch (e) {
+                console.error('Discard stop motion frame failed:', e);
+                return;
+            }
+            updateStopMotionUi();
+            await refreshStopMotionOverlayPreview();
         }
 
         function applyDigitalZoomFromSlider() {
@@ -3102,6 +3871,24 @@
             } else {
                 ctx.drawImage(video, sx, sy, sw, sh, 0, 0, destW, destH);
             }
+        }
+
+        let sharedCaptureFrameCanvas = null;
+        let sharedCaptureFrameCtx = null;
+
+        /** One reusable canvas for stop-motion / timelapse / photo to avoid allocating every frame. */
+        function getSharedCaptureFrameCanvas(targetW, targetH) {
+            const w = Math.max(1, Math.floor(targetW));
+            const h = Math.max(1, Math.floor(targetH));
+            if (!sharedCaptureFrameCanvas) {
+                sharedCaptureFrameCanvas = document.createElement('canvas');
+                sharedCaptureFrameCtx = sharedCaptureFrameCanvas.getContext('2d');
+            }
+            if (sharedCaptureFrameCanvas.width !== w || sharedCaptureFrameCanvas.height !== h) {
+                sharedCaptureFrameCanvas.width = w;
+                sharedCaptureFrameCanvas.height = h;
+            }
+            return { canvas: sharedCaptureFrameCanvas, ctx: sharedCaptureFrameCtx };
         }
 
         async function replaceAudioTrackInCurrentStream(deviceId) {
@@ -3208,7 +3995,7 @@
                 if (!currentStream) {
                     throw new Error(t('errNoCameraStream'));
                 }
-                if (stopMotionFrames.length > 0 || stopMotionEncoding) {
+                if (getStopMotionFrameCount() > 0 || stopMotionEncoding) {
                     return;
                 }
 
@@ -3254,6 +4041,26 @@
 
                 const composedStream = new MediaStream(composedStreamTracks);
 
+                const diskSink = await openRecordingDiskSink(getTimestamp() + 'video.webm');
+                const noticeEl = document.getElementById('recordingStatusNotice');
+                if (noticeEl) {
+                    noticeEl.hidden = true;
+                    noticeEl.textContent = '';
+                }
+                if (diskSink.mode === 'cancelled') {
+                    showRecordingStatusNotice(t('recordingSaveCancelled'), false);
+                    cleanupCameraRecordingArtifacts();
+                    return;
+                }
+
+                cameraRecordingDiskMode = diskSink.mode === 'disk';
+                cameraRecordingWritable = diskSink.mode === 'disk' ? diskSink.writable : null;
+                cameraRecordingOpfsFileHandle = diskSink.fileHandle || null;
+                cameraRecordingOpfsDispose =
+                    typeof diskSink.opfsDispose === 'function' ? diskSink.opfsDispose : null;
+                cameraRecordingDiskWriteQueue = Promise.resolve();
+                recordedChunks = [];
+
                 const options = {
                     mimeType: 'video/webm;codecs=vp9,opus',
                     videoBitsPerSecond: pickVideoBitrateForResolution(w, h),
@@ -3264,29 +4071,90 @@
                 }
 
                 mediaRecorder = new MediaRecorder(composedStream, options);
-                recordedChunks = [];
 
                 mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
+                    const chunk = event.data;
+                    if (cameraRecordingDiskMode && cameraRecordingWritable) {
+                        queueCameraDiskWrite(chunk);
+                    } else if (chunk && chunk.size > 0) {
+                        recordedChunks.push(chunk);
                     }
                 };
 
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = getTimestamp() + 'video.webm';
-                    document.body.appendChild(a);
-                    a.click();
-                    URL.revokeObjectURL(url);
-
-                    cleanupCameraRecordingArtifacts();
+                    void (async () => {
+                        const writableRef = cameraRecordingWritable;
+                        const diskMode = cameraRecordingDiskMode;
+                        try {
+                            if (diskMode && writableRef) {
+                                await cameraRecordingDiskWriteQueue.catch(() => {});
+                                await writableRef.close();
+                                cameraRecordingWritable = null;
+                                cameraRecordingDiskMode = false;
+                                cameraRecordingDiskWriteQueue = Promise.resolve();
+                                const fhLoc = cameraRecordingOpfsFileHandle;
+                                const dispLoc = cameraRecordingOpfsDispose;
+                                cameraRecordingOpfsFileHandle = null;
+                                cameraRecordingOpfsDispose = null;
+                                if (fhLoc) {
+                                    await finalizeOpfsRecordingToDownload(
+                                        fhLoc,
+                                        getTimestamp() + 'video.webm',
+                                        dispLoc
+                                    );
+                                }
+                            } else {
+                                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.style.display = 'none';
+                                a.href = url;
+                                a.download = getTimestamp() + 'video.webm';
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            }
+                        } catch (e) {
+                            console.error('Camera recording finalize:', e);
+                            showRecordingStatusNotice(t('recordingDiskWriteFailed'), true);
+                            try {
+                                if (writableRef) {
+                                    await writableRef.abort();
+                                }
+                            } catch (e2) {}
+                            cameraRecordingWritable = null;
+                            cameraRecordingDiskMode = false;
+                            cameraRecordingDiskWriteQueue = Promise.resolve();
+                            if (cameraRecordingOpfsDispose) {
+                                try {
+                                    await cameraRecordingOpfsDispose();
+                                } catch (e4) {}
+                                cameraRecordingOpfsDispose = null;
+                                cameraRecordingOpfsFileHandle = null;
+                            }
+                            if (recordedChunks.length > 0) {
+                                try {
+                                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.style.display = 'none';
+                                    a.href = url;
+                                    a.download = getTimestamp() + 'video-fallback.webm';
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                } catch (e3) {}
+                            }
+                        } finally {
+                            cleanupCameraRecordingArtifacts();
+                        }
+                    })();
                 };
 
-                mediaRecorder.start();
+                mediaRecorder.start(RECORDING_TIMESLICE_MS);
+                if (!cameraRecordingDiskMode) {
+                    maybeShowRecordingMemoryHint();
+                }
                 cameraRecordingActive = true;
                 updateCameraConstraintControlsState();
                 
@@ -3311,6 +4179,11 @@
 
         function stopRecording() {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
+                try {
+                    if (typeof mediaRecorder.requestData === 'function') {
+                        mediaRecorder.requestData();
+                    }
+                } catch (e) {}
                 mediaRecorder.stop();
             }
 
@@ -3330,6 +4203,22 @@
         function cleanupCameraRecordingArtifacts() {
             try {
                 cameraRecordingActive = false;
+                if (cameraRecordingWritable) {
+                    const w = cameraRecordingWritable;
+                    cameraRecordingWritable = null;
+                    cameraRecordingDiskMode = false;
+                    cameraRecordingDiskWriteQueue = Promise.resolve();
+                    void closeRecordingWritableQuietly(w);
+                } else {
+                    cameraRecordingDiskMode = false;
+                    cameraRecordingDiskWriteQueue = Promise.resolve();
+                }
+                if (cameraRecordingOpfsDispose) {
+                    const d = cameraRecordingOpfsDispose;
+                    cameraRecordingOpfsDispose = null;
+                    cameraRecordingOpfsFileHandle = null;
+                    void d().catch(() => {});
+                }
                 if (cameraDrawRequestId) {
                     cancelAnimationFrame(cameraDrawRequestId);
                     cameraDrawRequestId = null;
@@ -3386,9 +4275,9 @@
                 div[style*="position: fixed"],
                 div[style*="bottom:"],
                 div[style*="z-index"],
-                div[role="status"],
+                div[role="status"]:not(#recordingStatusNotice),
                 div[role="alert"],
-                div[aria-live],
+                div[aria-live]:not(#recordingStatusNotice):not(#timelapseInfoPanel),
                 div[class*="sharing"],
                 div[class*="notification"],
                 div[class*="toast"] {
@@ -3413,15 +4302,28 @@
                     width: 100% !important;
                     min-width: 0 !important;
                 }
+                #recordingStatusNotice:not([hidden]) {
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    position: static !important;
+                    bottom: auto !important;
+                    pointer-events: auto !important;
+                    height: auto !important;
+                    width: auto !important;
+                    max-height: none !important;
+                    max-width: none !important;
+                    clip: auto !important;
+                }
             `;
         }
 
         function aggressiveHideNotifications() {
             // Hide by common attributes
             const selectors = [
-                '[role="status"]:not(.pip-video):not(.pip-container)',
+                '[role="status"]:not(.pip-video):not(.pip-container):not(#recordingStatusNotice)',
                 '[role="alert"]:not(.pip-video):not(.pip-container)',
-                '[aria-live]:not(.pip-video):not(.pip-container)',
+                '[aria-live]:not(.pip-video):not(.pip-container):not(#recordingStatusNotice):not(#timelapseInfoPanel)',
                 'div[style*="position: fixed"]:not(.pip-video):not(.pip-container)',
                 'div[style*="bottom:"]:not(.pip-video):not(.pip-container)',
                 'div[class*="sharing"]:not(.pip-video):not(.pip-container)',
@@ -3436,6 +4338,9 @@
                         return;
                     }
                     if (el.id === 'timelapseInfoPanel') {
+                        return;
+                    }
+                    if (el.id === 'recordingStatusNotice') {
                         return;
                     }
 
@@ -3463,6 +4368,9 @@
                     return;
                 }
                 if (el.id === 'timelapseInfoPanel') {
+                    return;
+                }
+                if (el.id === 'recordingStatusNotice') {
                     return;
                 }
 
@@ -3614,6 +4522,10 @@
             if (element.id === 'timelapseInfoPanel') {
                 return;
             }
+            const hid = (element.id || '').toLowerCase();
+            if (hid === 'recordingstatusnotice' || hid.startsWith('stopmotion')) {
+                return;
+            }
 
             const style = window.getComputedStyle(element);
             const text = (element.textContent || '').toLowerCase();
@@ -3693,7 +4605,7 @@
         function injectEdgeNotificationCSS() {
             const style = document.createElement('style');
             style.textContent = 
-                'div[role="status"],' +
+                'div[role="status"]:not(#recordingStatusNotice),' +
                 'div[role="alert"],' +
                 'div[class*="notification"],' +
                 'div[class*="toast"],' +
@@ -3701,8 +4613,8 @@
                 'div[class*="sharing"],' +
                 'div[style*="fixed"],' +
                 'div[style*="notification"],' +
-                'div[aria-live="polite"],' +
-                'div[aria-live="assertive"],' +
+                'div[aria-live="polite"]:not(#recordingStatusNotice):not(#timelapseInfoPanel),' +
+                'div[aria-live="assertive"]:not(#recordingStatusNotice):not(#timelapseInfoPanel),' +
                 'div[class*="edge-notification"],' +
                 'div[class*="ms-"],' +
                 'div[class*="microsoftEdge"],' +
@@ -3740,7 +4652,7 @@
         async function startScreenRecording() {
             try {
                 if (screenCaptureStarting) return;
-                if (stopMotionFrames.length > 0 || stopMotionEncoding) return;
+                if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
                 screenCaptureStarting = true;
                 toggleScreenRecordingButton.disabled = true;
 
@@ -3853,6 +4765,52 @@
                 }
 
                 const composedStream = new MediaStream(composedStreamTracks);
+
+                const screenDiskSink = await openRecordingDiskSink(getTimestamp() + 'screen.webm');
+                const screenNoticeEl = document.getElementById('recordingStatusNotice');
+                if (screenNoticeEl) {
+                    screenNoticeEl.hidden = true;
+                    screenNoticeEl.textContent = '';
+                }
+                if (screenDiskSink.mode === 'cancelled') {
+                    showRecordingStatusNotice(t('recordingSaveCancelled'), false);
+                    screenRecordingActive = false;
+                    cleanupScreenRecordingArtifacts();
+                    try {
+                        if (screenStream) screenStream.getTracks().forEach((t) => t.stop());
+                    } catch (e) {}
+                    screenStream = null;
+                    try {
+                        if (screenPreviewVideoEl && screenPreviewVideoEl.parentNode) {
+                            screenPreviewVideoEl.remove();
+                        }
+                    } catch (e) {}
+                    if (window.notificationObserver) {
+                        try {
+                            window.notificationObserver.disconnect();
+                        } catch (e) {}
+                        window.notificationObserver = null;
+                    }
+                    if (window.isolatedContainer && window.isolatedContainer.iframe) {
+                        try {
+                            window.isolatedContainer.iframe.remove();
+                        } catch (e) {}
+                    }
+                    window.isolatedContainer = null;
+                    screenCaptureStarting = false;
+                    toggleScreenRecordingButton.disabled = false;
+                    syncRecordingModeButtons();
+                    return;
+                }
+
+                screenRecordingDiskMode = screenDiskSink.mode === 'disk';
+                screenRecordingWritable = screenDiskSink.mode === 'disk' ? screenDiskSink.writable : null;
+                screenRecordingOpfsFileHandle = screenDiskSink.fileHandle || null;
+                screenRecordingOpfsDispose =
+                    typeof screenDiskSink.opfsDispose === 'function' ? screenDiskSink.opfsDispose : null;
+                screenRecordingDiskWriteQueue = Promise.resolve();
+                screenRecordedChunks = [];
+
                 const screenRecOptions = {
                     mimeType: 'video/webm;codecs=vp9,opus',
                     videoBitsPerSecond: 12000000,
@@ -3864,26 +4822,83 @@
 
                 screenMediaRecorder = new MediaRecorder(composedStream, screenRecOptions);
 
-                screenRecordedChunks = [];
-
                 screenMediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        screenRecordedChunks.push(event.data);
+                    const chunk = event.data;
+                    if (screenRecordingDiskMode && screenRecordingWritable) {
+                        queueScreenDiskWrite(chunk);
+                    } else if (chunk && chunk.size > 0) {
+                        screenRecordedChunks.push(chunk);
                     }
                 };
 
                 screenMediaRecorder.onstop = () => {
-                    const blob = new Blob(screenRecordedChunks, { type: 'video/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = getTimestamp() + 'screen.webm';
-                    document.body.appendChild(a);
-                    a.click();
-                    URL.revokeObjectURL(url);
-
-                    cleanupScreenRecordingArtifacts();
+                    void (async () => {
+                        const writableRef = screenRecordingWritable;
+                        const diskMode = screenRecordingDiskMode;
+                        try {
+                            if (diskMode && writableRef) {
+                                await screenRecordingDiskWriteQueue.catch(() => {});
+                                await writableRef.close();
+                                screenRecordingWritable = null;
+                                screenRecordingDiskMode = false;
+                                screenRecordingDiskWriteQueue = Promise.resolve();
+                                const fhLoc = screenRecordingOpfsFileHandle;
+                                const dispLoc = screenRecordingOpfsDispose;
+                                screenRecordingOpfsFileHandle = null;
+                                screenRecordingOpfsDispose = null;
+                                if (fhLoc) {
+                                    await finalizeOpfsRecordingToDownload(
+                                        fhLoc,
+                                        getTimestamp() + 'screen.webm',
+                                        dispLoc
+                                    );
+                                }
+                            } else {
+                                const blob = new Blob(screenRecordedChunks, { type: 'video/webm' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.style.display = 'none';
+                                a.href = url;
+                                a.download = getTimestamp() + 'screen.webm';
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            }
+                        } catch (e) {
+                            console.error('Screen recording finalize:', e);
+                            showRecordingStatusNotice(t('recordingDiskWriteFailed'), true);
+                            try {
+                                if (writableRef) {
+                                    await writableRef.abort();
+                                }
+                            } catch (e2) {}
+                            screenRecordingWritable = null;
+                            screenRecordingDiskMode = false;
+                            screenRecordingDiskWriteQueue = Promise.resolve();
+                            if (screenRecordingOpfsDispose) {
+                                try {
+                                    await screenRecordingOpfsDispose();
+                                } catch (e4) {}
+                                screenRecordingOpfsDispose = null;
+                                screenRecordingOpfsFileHandle = null;
+                            }
+                            if (screenRecordedChunks.length > 0) {
+                                try {
+                                    const blob = new Blob(screenRecordedChunks, { type: 'video/webm' });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.style.display = 'none';
+                                    a.href = url;
+                                    a.download = getTimestamp() + 'screen-fallback.webm';
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                } catch (e3) {}
+                            }
+                        } finally {
+                            cleanupScreenRecordingArtifacts();
+                        }
+                    })();
                 };
 
                 screenRecordingActive = true;
@@ -3903,7 +4918,10 @@
                 };
                 screenDrawRequestId = requestAnimationFrame(drawFrame);
 
-                screenMediaRecorder.start();
+                screenMediaRecorder.start(RECORDING_TIMESLICE_MS);
+                if (!screenRecordingDiskMode) {
+                    maybeShowRecordingMemoryHint();
+                }
                 toggleScreenRecordingButton.textContent = t('btnStopScreen');
                 toggleScreenRecordingButton.classList.add('recording');
                 toggleScreenRecordingButton.setAttribute('aria-pressed', 'true');
@@ -3963,6 +4981,11 @@
             }
             const wasRecording = screenMediaRecorder && screenMediaRecorder.state === 'recording';
             if (wasRecording) {
+                try {
+                    if (typeof screenMediaRecorder.requestData === 'function') {
+                        screenMediaRecorder.requestData();
+                    }
+                } catch (e) {}
                 screenMediaRecorder.stop();
             }
             toggleScreenRecordingButton.textContent = t('btnStartScreen');
@@ -3981,6 +5004,22 @@
         function cleanupScreenRecordingArtifacts() {
             try {
                 screenRecordingActive = false;
+                if (screenRecordingWritable) {
+                    const w = screenRecordingWritable;
+                    screenRecordingWritable = null;
+                    screenRecordingDiskMode = false;
+                    screenRecordingDiskWriteQueue = Promise.resolve();
+                    void closeRecordingWritableQuietly(w);
+                } else {
+                    screenRecordingDiskMode = false;
+                    screenRecordingDiskWriteQueue = Promise.resolve();
+                }
+                if (screenRecordingOpfsDispose) {
+                    const d = screenRecordingOpfsDispose;
+                    screenRecordingOpfsDispose = null;
+                    screenRecordingOpfsFileHandle = null;
+                    void d().catch(() => {});
+                }
                 if (screenDrawRequestId) {
                     cancelAnimationFrame(screenDrawRequestId);
                     screenDrawRequestId = null;
@@ -4029,14 +5068,28 @@
         }
 
         function startAudioRecording() {
-            if (stopMotionFrames.length > 0 || stopMotionEncoding) return;
+            if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
             const audioConstraints = currentMicDeviceId
                 ? { deviceId: currentMicDeviceId }
                 : true;
 
             navigator.mediaDevices
                 .getUserMedia({ audio: audioConstraints })
-                .then((stream) => {
+                .then(async (stream) => {
+                    const sink = await openRecordingDiskSink(getTimestamp() + 'audio.webm', 'audio');
+                    const noticeEl = document.getElementById('recordingStatusNotice');
+                    if (noticeEl) {
+                        noticeEl.hidden = true;
+                        noticeEl.textContent = '';
+                    }
+                    if (sink.mode === 'cancelled') {
+                        showRecordingStatusNotice(t('recordingSaveCancelled'), false);
+                        try {
+                            stream.getTracks().forEach((t) => t.stop());
+                        } catch (e) {}
+                        return;
+                    }
+
                     const preferMime =
                         typeof MediaRecorder !== 'undefined' &&
                         MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
@@ -4046,47 +5099,141 @@
                     try {
                         rec = new MediaRecorder(stream, { mimeType: preferMime });
                     } catch (e) {
-                        rec = new MediaRecorder(stream);
+                        try {
+                            rec = new MediaRecorder(stream);
+                        } catch (e2) {
+                            console.error('Audio MediaRecorder init failed:', e2);
+                            if (sink.mode === 'disk' && sink.writable) {
+                                void closeRecordingWritableQuietly(sink.writable);
+                            }
+                            if (typeof sink.opfsDispose === 'function') {
+                                void sink.opfsDispose().catch(() => {});
+                            }
+                            try {
+                                stream.getTracks().forEach((t) => t.stop());
+                            } catch (e3) {}
+                            return;
+                        }
                     }
                     audioRecorder = rec;
                     audioRecordStream = stream;
+                    audioRecordingDiskMode = sink.mode === 'disk';
+                    audioRecordingWritable = sink.mode === 'disk' ? sink.writable : null;
+                    audioRecordingOpfsFileHandle = sink.fileHandle || null;
+                    audioRecordingOpfsDispose =
+                        typeof sink.opfsDispose === 'function' ? sink.opfsDispose : null;
+                    audioRecordingDiskWriteQueue = Promise.resolve();
                     audioChunks = [];
 
                     rec.ondataavailable = (event) => {
-                        if (event.data && event.data.size > 0) {
-                            audioChunks.push(event.data);
+                        const chunk = event.data;
+                        if (audioRecordingDiskMode && audioRecordingWritable) {
+                            queueAudioDiskWrite(chunk);
+                        } else if (chunk && chunk.size > 0) {
+                            audioChunks.push(chunk);
                         }
                     };
 
                     rec.onstop = () => {
-                        const suppress = suppressAudioDownload;
-                        suppressAudioDownload = false;
-                        const chunkCopy = audioChunks.slice();
-                        const blob = new Blob(chunkCopy, {
-                            type: rec.mimeType || 'audio/webm',
-                        });
-                        try {
-                            if (audioRecordStream) {
-                                audioRecordStream.getTracks().forEach((t) => t.stop());
-                                audioRecordStream = null;
+                        void (async () => {
+                            const suppress = suppressAudioDownload;
+                            suppressAudioDownload = false;
+                            const writableRef = audioRecordingWritable;
+                            const diskMode = audioRecordingDiskMode;
+                            const mime = rec.mimeType || 'audio/webm';
+                            try {
+                                if (suppress && diskMode && writableRef) {
+                                    await audioRecordingDiskWriteQueue.catch(() => {});
+                                    try {
+                                        await writableRef.abort();
+                                    } catch (e) {}
+                                    audioRecordingWritable = null;
+                                    audioRecordingDiskMode = false;
+                                    audioRecordingDiskWriteQueue = Promise.resolve();
+                                    if (audioRecordingOpfsDispose) {
+                                        try {
+                                            await audioRecordingOpfsDispose();
+                                        } catch (e) {}
+                                        audioRecordingOpfsDispose = null;
+                                        audioRecordingOpfsFileHandle = null;
+                                    }
+                                } else if (diskMode && writableRef) {
+                                    await audioRecordingDiskWriteQueue.catch(() => {});
+                                    await writableRef.close();
+                                    audioRecordingWritable = null;
+                                    audioRecordingDiskMode = false;
+                                    audioRecordingDiskWriteQueue = Promise.resolve();
+                                    const fhLoc = audioRecordingOpfsFileHandle;
+                                    const dispLoc = audioRecordingOpfsDispose;
+                                    audioRecordingOpfsFileHandle = null;
+                                    audioRecordingOpfsDispose = null;
+                                    if (fhLoc) {
+                                        await finalizeOpfsRecordingToDownload(
+                                            fhLoc,
+                                            getTimestamp() + 'audio.webm',
+                                            dispLoc
+                                        );
+                                    }
+                                } else if (!suppress) {
+                                    const chunkCopy = audioChunks.slice();
+                                    const blob = new Blob(chunkCopy, { type: mime });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.style.display = 'none';
+                                    a.href = url;
+                                    a.download = getTimestamp() + 'audio.webm';
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                }
+                            } catch (e) {
+                                console.error('Audio recording finalize:', e);
+                                showRecordingStatusNotice(t('recordingDiskWriteFailed'), true);
+                                try {
+                                    if (writableRef) {
+                                        await writableRef.abort();
+                                    }
+                                } catch (e2) {}
+                                audioRecordingWritable = null;
+                                audioRecordingDiskMode = false;
+                                audioRecordingDiskWriteQueue = Promise.resolve();
+                                if (audioRecordingOpfsDispose) {
+                                    try {
+                                        await audioRecordingOpfsDispose();
+                                    } catch (e3) {}
+                                    audioRecordingOpfsDispose = null;
+                                    audioRecordingOpfsFileHandle = null;
+                                }
+                                if (!suppress && audioChunks.length > 0) {
+                                    try {
+                                        const blob = new Blob(audioChunks.slice(), { type: mime });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.style.display = 'none';
+                                        a.href = url;
+                                        a.download = getTimestamp() + 'audio-fallback.webm';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                    } catch (e3) {}
+                                }
+                            } finally {
+                                try {
+                                    if (audioRecordStream) {
+                                        audioRecordStream.getTracks().forEach((t) => t.stop());
+                                        audioRecordStream = null;
+                                    }
+                                } catch (e) {}
+                                audioRecorder = null;
+                                audioChunks = [];
                             }
-                        } catch (e) {}
-                        audioRecorder = null;
-                        audioChunks = [];
-
-                        if (!suppress) {
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.style.display = 'none';
-                            a.href = url;
-                            a.download = getTimestamp() + 'audio.webm';
-                            document.body.appendChild(a);
-                            a.click();
-                            URL.revokeObjectURL(url);
-                        }
+                        })();
                     };
 
-                    rec.start(100);
+                    rec.start(RECORDING_TIMESLICE_MS);
+                    if (!audioRecordingDiskMode) {
+                        maybeShowRecordingMemoryHint();
+                    }
                     toggleAudioRecordingButton.textContent = t('btnStopAudio');
                     toggleAudioRecordingButton.classList.add('recording');
                     toggleAudioRecordingButton.setAttribute('aria-pressed', 'true');
@@ -4115,11 +5262,11 @@
 
         function takePhoto() {
             if (currentStream) {
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                drawVideoWithDigitalZoom(context, canvas.width, canvas.height);
+                const w = video.videoWidth;
+                const h = video.videoHeight;
+                if (!w || !h) return;
+                const { canvas, ctx } = getSharedCaptureFrameCanvas(w, h);
+                drawVideoWithDigitalZoom(ctx, w, h);
 
                 canvas.toBlob((blob) => {
                     if (!blob) return;
@@ -4134,9 +5281,14 @@
         }
 
         function updateStopMotionUi() {
-            const n = stopMotionFrames.length;
-            if (stopMotionFrameCount) {
-                stopMotionFrameCount.textContent = String(n).padStart(4, '0');
+            const n = getStopMotionFrameCount();
+            if (n === 0 && stopMotionLastFrameOverlayEnabled) {
+                stopMotionLastFrameOverlayEnabled = false;
+                syncStopMotionOverlayToggleVisual();
+                void refreshStopMotionOverlayPreview();
+            }
+            if (stopMotionCounterEl) {
+                stopMotionCounterEl.textContent = String(n).padStart(4, '0');
             }
             const fps = getStopMotionExportFps();
             if (stopMotionSaveDuration) {
@@ -4144,40 +5296,56 @@
                 stopMotionSaveDuration.textContent = formatTimelapseHmsTriple(sec);
             }
             syncRecordingModeButtons();
+            applyStopMotionAuxiliaryLocks();
         }
 
         async function captureStopMotionFrame() {
             if (!currentStream || stopMotionEncoding) return;
             try {
-                const captureCanvas = document.createElement('canvas');
-                const ctx = captureCanvas.getContext('2d');
+                if (!stopMotionFrameStore) {
+                    stopMotionFrameStore = await createFrameStore('sm');
+                }
                 const w = video.videoWidth || 1280;
                 const h = video.videoHeight || 720;
-                captureCanvas.width = w;
-                captureCanvas.height = h;
+                const { canvas: captureCanvas, ctx } = getSharedCaptureFrameCanvas(w, h);
                 ctx.clearRect(0, 0, w, h);
                 drawVideoWithDigitalZoom(ctx, w, h);
-                const bmp = await createImageBitmap(captureCanvas);
-                stopMotionFrames.push(bmp);
+                await stopMotionFrameStore.appendFromCanvas(captureCanvas);
                 updateStopMotionUi();
+                await refreshStopMotionOverlayPreview();
             } catch (e) {
                 console.error('Stop motion frame capture failed:', e);
             }
         }
 
-        function saveStopMotionVideo() {
-            if (stopMotionEncoding || stopMotionFrames.length === 0) return;
+        async function saveStopMotionVideo() {
+            if (stopMotionEncoding || getStopMotionFrameCount() === 0 || !stopMotionFrameStore) return;
 
-            const framesToRender = stopMotionFrames.slice();
             const playbackFps = getStopMotionExportFps();
+
+            const sink = await openRecordingDiskSink(getTimestamp() + 'stopmotion.webm');
+            const smNoticeEl = document.getElementById('recordingStatusNotice');
+            if (smNoticeEl) {
+                smNoticeEl.hidden = true;
+                smNoticeEl.textContent = '';
+            }
+            if (sink.mode === 'cancelled') {
+                showRecordingStatusNotice(t('recordingSaveCancelled'), false);
+                return;
+            }
+
+            await stopMotionFrameStore.flush();
+            const frameCount = stopMotionFrameStore.getCount();
+            const storeRef = stopMotionFrameStore;
 
             stopMotionEncoding = true;
             updateStopMotionUi();
 
+            const dim = storeRef.getCanvasDimensions();
             const outCanvas = document.createElement('canvas');
             const outCtx = outCanvas.getContext('2d');
-            outCanvas.width = framesToRender[0].width;
-            outCanvas.height = framesToRender[0].height;
+            outCanvas.width = dim.width;
+            outCanvas.height = dim.height;
 
             const outStream = outCanvas.captureStream(playbackFps);
             const lapseOptions = {
@@ -4188,12 +5356,20 @@
                 lapseOptions.mimeType = 'video/webm;codecs=vp8';
             }
 
+            const diskMode = sink.mode === 'disk';
+            let writable = sink.mode === 'disk' ? sink.writable : null;
+            const diskAppender = diskMode && writable ? createDiskWriteAppender(writable) : null;
             const chunks = [];
+
             let recorder;
             try {
                 recorder = new MediaRecorder(outStream, lapseOptions);
             } catch (e) {
                 console.error('Stop motion export failed:', e);
+                if (writable) {
+                    void closeRecordingWritableQuietly(writable);
+                    writable = null;
+                }
                 try {
                     outStream.getTracks().forEach((t) => t.stop());
                 } catch (e2) {}
@@ -4203,38 +5379,81 @@
             }
 
             recorder.ondataavailable = (event) => {
-                if (event.data && event.data.size > 0) chunks.push(event.data);
+                const chunk = event.data;
+                if (diskAppender) {
+                    diskAppender.push(chunk);
+                } else if (chunk && chunk.size > 0) {
+                    chunks.push(chunk);
+                }
             };
             recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = getTimestamp() + 'stopmotion.webm';
-                document.body.appendChild(a);
-                a.click();
-                URL.revokeObjectURL(url);
-
-                try {
-                    outStream.getTracks().forEach((t) => t.stop());
-                } catch (e) {}
-                try {
-                    framesToRender.forEach((bmp) => {
+                void (async () => {
+                    const writableRef = writable;
+                    try {
+                        if (diskMode && writableRef && diskAppender) {
+                            await diskAppender.flush();
+                            await writableRef.close();
+                            writable = null;
+                            showRecordingStatusNotice(t('recordingSavedToDisk'), false);
+                        } else {
+                            const blob = new Blob(chunks, { type: 'video/webm' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = getTimestamp() + 'stopmotion.webm';
+                            document.body.appendChild(a);
+                            a.click();
+                            URL.revokeObjectURL(url);
+                        }
+                    } catch (e) {
+                        console.error('Stop motion export finalize:', e);
+                        showRecordingStatusNotice(t('recordingDiskWriteFailed'), true);
                         try {
-                            bmp.close && bmp.close();
+                            if (writableRef) {
+                                await writableRef.abort();
+                            }
+                        } catch (e2) {}
+                        writable = null;
+                        if (chunks.length > 0) {
+                            try {
+                                const blob = new Blob(chunks, { type: 'video/webm' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.style.display = 'none';
+                                a.href = url;
+                                a.download = getTimestamp() + 'stopmotion-fallback.webm';
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            } catch (e3) {}
+                        }
+                    } finally {
+                        try {
+                            outStream.getTracks().forEach((t) => t.stop());
                         } catch (e) {}
-                    });
-                } catch (e) {}
-                stopMotionFrames = [];
-                stopMotionEncoding = false;
-                updateStopMotionUi();
+                        try {
+                            if (storeRef) {
+                                await storeRef.clear();
+                            }
+                        } catch (e) {}
+                        stopMotionFrameStore = null;
+                        stopMotionEncoding = false;
+                        updateStopMotionUi();
+                        await refreshStopMotionOverlayPreview();
+                    }
+                })();
             };
 
+            const frameIntervalMs = Math.max(1, Math.floor(1000 / playbackFps));
             try {
-                recorder.start();
+                await drawStoredFrameToCanvas(storeRef, 0, outCtx, outCanvas.width, outCanvas.height);
             } catch (e) {
-                console.error('Stop motion recorder start failed:', e);
+                console.error('Stop motion export first frame:', e);
+                if (writable) {
+                    void closeRecordingWritableQuietly(writable);
+                    writable = null;
+                }
                 try {
                     outStream.getTracks().forEach((t) => t.stop());
                 } catch (e2) {}
@@ -4243,23 +5462,51 @@
                 return;
             }
 
-            let idx = 0;
-            const frameIntervalMs = Math.max(1, Math.floor(1000 / playbackFps));
-            const renderTimer = setInterval(() => {
-                if (idx >= framesToRender.length) {
-                    clearInterval(renderTimer);
-                    recorder.stop();
-                    return;
+            try {
+                recorder.start(RECORDING_TIMESLICE_MS);
+            } catch (e) {
+                console.error('Stop motion recorder start failed:', e);
+                if (writable) {
+                    void closeRecordingWritableQuietly(writable);
+                    writable = null;
                 }
-                outCtx.drawImage(framesToRender[idx], 0, 0, outCanvas.width, outCanvas.height);
-                idx += 1;
-            }, frameIntervalMs);
+                try {
+                    outStream.getTracks().forEach((t) => t.stop());
+                } catch (e2) {}
+                stopMotionEncoding = false;
+                updateStopMotionUi();
+                return;
+            }
+            if (!diskMode) {
+                maybeShowRecordingMemoryHint();
+            }
+
+            void (async () => {
+                try {
+                    for (let idx = 1; idx < frameCount; idx++) {
+                        await new Promise((r) => setTimeout(r, frameIntervalMs));
+                        await drawStoredFrameToCanvas(storeRef, idx, outCtx, outCanvas.width, outCanvas.height);
+                    }
+                    await new Promise((r) => setTimeout(r, Math.max(120, frameIntervalMs * 2, RECORDING_TIMESLICE_MS * 2)));
+                    try {
+                        if (typeof recorder.requestData === 'function') {
+                            recorder.requestData();
+                        }
+                    } catch (e) {}
+                    recorder.stop();
+                } catch (e) {
+                    console.error('Stop motion encode loop:', e);
+                    try {
+                        recorder.stop();
+                    } catch (e2) {}
+                }
+            })();
         }
 
-        function cleanupTimelapseArtifacts() {
+        async function cleanupTimelapseArtifacts() {
             timelapseCapturing = false;
             if (timelapseCaptureTimer) {
-                clearInterval(timelapseCaptureTimer);
+                clearTimeout(timelapseCaptureTimer);
                 timelapseCaptureTimer = null;
             }
             if (timelapseRecordClockTimer) {
@@ -4267,12 +5514,14 @@
                 timelapseRecordClockTimer = null;
             }
             timelapseRecordStartTime = 0;
-            try {
-                timelapseFrames.forEach((bmp) => {
-                    try { bmp.close && bmp.close(); } catch (e) {}
-                });
-            } catch (e) {}
-            timelapseFrames = [];
+            if (timelapseFrameStore) {
+                try {
+                    await timelapseFrameStore.clear();
+                } catch (e) {
+                    console.warn('Timelapse frame store cleanup:', e);
+                }
+                timelapseFrameStore = null;
+            }
             updateTimelapseInfoIdle();
         }
 
@@ -4327,7 +5576,7 @@
         function updateTimelapseInfoDuringCapture() {
             if (!timelapseCapturing) return;
             const p = timelapseSessionCache;
-            const n = timelapseFrames.length;
+            const n = getTimelapseFrameCount();
             const elapsed =
                 timelapseRecordStartTime > 0 ? (performance.now() - timelapseRecordStartTime) / 1000 : 0;
             const playbackSoFar = Math.floor(n / p.fps);
@@ -4357,13 +5606,15 @@
         async function startTimelapse() {
             if (!currentStream) return;
             if (getPrimaryRecordingActiveButton() != null) return;
-            if (stopMotionFrames.length > 0 || stopMotionEncoding) return;
+            if (timelapseExportInProgress) return;
+            if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
 
             const intervalSeconds = Math.max(1, parseInt(timelapseIntervalInput.value || '2', 10));
             const targetFrames = Math.max(2, parseInt(timelapseFramesInput.value || '601', 10));
             const playbackFps = Math.max(5, parseInt(timelapsePlaybackFpsInput.value || '30', 10));
 
-            cleanupTimelapseArtifacts();
+            await cleanupTimelapseArtifacts();
+            timelapseFrameStore = await createFrameStore('tl');
             timelapseSessionCache = {
                 targetFrames,
                 intervalSec: intervalSeconds,
@@ -4384,39 +5635,50 @@
             toggleTimelapseButton.setAttribute('aria-pressed', 'true');
             syncRecordingModeButtons();
 
-            // Capture frames from the current camera preview into ImageBitmaps.
-            const captureCanvas = document.createElement('canvas');
-            const ctx = captureCanvas.getContext('2d');
             const w = video.videoWidth || 1280;
             const h = video.videoHeight || 720;
-            captureCanvas.width = w;
-            captureCanvas.height = h;
+            const { canvas: captureCanvas, ctx } = getSharedCaptureFrameCanvas(w, h);
 
-            const captureOnce = async () => {
-                if (!timelapseCapturing) return;
+            let captureBusy = false;
+            const scheduleNextCapture = (delayMs) => {
+                if (timelapseCaptureTimer) {
+                    clearTimeout(timelapseCaptureTimer);
+                    timelapseCaptureTimer = null;
+                }
+                if (!timelapseCapturing || !timelapseFrameStore) return;
+                timelapseCaptureTimer = setTimeout(runCaptureStep, delayMs);
+            };
+
+            const runCaptureStep = async () => {
+                if (!timelapseCapturing || captureBusy || !timelapseFrameStore) return;
+                captureBusy = true;
                 try {
                     ctx.clearRect(0, 0, w, h);
                     drawVideoWithDigitalZoom(ctx, w, h);
-                    const bmp = await createImageBitmap(captureCanvas);
-                    timelapseFrames.push(bmp);
+                    await timelapseFrameStore.appendFromCanvas(captureCanvas);
                     updateTimelapseInfoDuringCapture();
+                    if (getTimelapseFrameCount() >= targetFrames) {
+                        await stopTimelapse(playbackFps);
+                        return;
+                    }
+                    if (timelapseCapturing) {
+                        scheduleNextCapture(intervalSeconds * 1000);
+                    }
                 } catch (e) {
                     console.error('Timelapse capture frame failed:', e);
-                }
-
-                if (timelapseFrames.length >= targetFrames) {
-                    stopTimelapse(playbackFps);
+                    if (timelapseCapturing) {
+                        scheduleNextCapture(intervalSeconds * 1000);
+                    }
+                } finally {
+                    captureBusy = false;
                 }
             };
 
-            // Capture immediately, then on interval.
-            await captureOnce();
-            updateTimelapseInfoDuringCapture();
-            timelapseCaptureTimer = setInterval(captureOnce, intervalSeconds * 1000);
+            await runCaptureStep();
         }
 
         async function stopTimelapse(playbackFpsOverride = null) {
-            if (!timelapseCapturing && timelapseFrames.length === 0) {
+            if (!timelapseCapturing && getTimelapseFrameCount() === 0) {
                 // Still reset UI in case.
                 toggleTimelapseButton.textContent = t('btnStartTimelapse');
                 toggleTimelapseButton.classList.remove('recording');
@@ -4429,7 +5691,7 @@
 
             timelapseCapturing = false;
             if (timelapseCaptureTimer) {
-                clearInterval(timelapseCaptureTimer);
+                clearTimeout(timelapseCaptureTimer);
                 timelapseCaptureTimer = null;
             }
             if (timelapseRecordClockTimer) {
@@ -4448,20 +5710,24 @@
             toggleTimelapseButton.setAttribute('aria-pressed', 'false');
             syncRecordingModeButtons();
 
-            const framesToRender = timelapseFrames.slice();
-            if (framesToRender.length < 2) {
-                cleanupTimelapseArtifacts();
+            if (timelapseFrameStore) {
+                await timelapseFrameStore.flush();
+            }
+            const frameCount = getTimelapseFrameCount();
+            if (frameCount < 2 || !timelapseFrameStore) {
+                await cleanupTimelapseArtifacts();
                 updateCameraConstraintControlsState();
                 return;
             }
 
-            updateTimelapseInfoDuringEncoding(0, framesToRender.length, finalRecordSec);
+            const storeRef = timelapseFrameStore;
+            updateTimelapseInfoDuringEncoding(0, frameCount, finalRecordSec);
 
-            // Render frames quickly into a canvas and record that canvas to a single file.
+            const dim = storeRef.getCanvasDimensions();
             const outCanvas = document.createElement('canvas');
             const outCtx = outCanvas.getContext('2d');
-            outCanvas.width = framesToRender[0].width;
-            outCanvas.height = framesToRender[0].height;
+            outCanvas.width = dim.width;
+            outCanvas.height = dim.height;
 
             const outStream = outCanvas.captureStream(playbackFps);
             const lapseOptions = {
@@ -4475,49 +5741,173 @@
                 lapseOptions.mimeType = 'video/webm;codecs=vp8';
             }
 
+            const sink = await openRecordingDiskSink(getTimestamp() + 'timelapse.webm');
+            const tlNoticeEl = document.getElementById('recordingStatusNotice');
+            if (tlNoticeEl) {
+                tlNoticeEl.hidden = true;
+                tlNoticeEl.textContent = '';
+            }
+            if (sink.mode === 'cancelled') {
+                showRecordingStatusNotice(t('recordingSaveCancelled'), false);
+                await cleanupTimelapseArtifacts();
+                updateCameraConstraintControlsState();
+                return;
+            }
+
+            const diskMode = sink.mode === 'disk';
+            let writable = sink.mode === 'disk' ? sink.writable : null;
+            const diskAppender = diskMode && writable ? createDiskWriteAppender(writable) : null;
             const chunks = [];
-            const recorder = new MediaRecorder(outStream, lapseOptions);
+
+            let recorder;
+            try {
+                recorder = new MediaRecorder(outStream, lapseOptions);
+            } catch (e) {
+                console.error('Timelapse encode failed:', e);
+                if (writable) {
+                    void closeRecordingWritableQuietly(writable);
+                    writable = null;
+                }
+                try {
+                    outStream.getTracks().forEach((t) => t.stop());
+                } catch (e2) {}
+                await cleanupTimelapseArtifacts();
+                updateCameraConstraintControlsState();
+                return;
+            }
+
             recorder.ondataavailable = (event) => {
-                if (event.data && event.data.size > 0) chunks.push(event.data);
+                const chunk = event.data;
+                if (diskAppender) {
+                    diskAppender.push(chunk);
+                } else if (chunk && chunk.size > 0) {
+                    chunks.push(chunk);
+                }
             };
             recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = getTimestamp() + 'timelapse.webm';
-                document.body.appendChild(a);
-                a.click();
-                URL.revokeObjectURL(url);
-
-                try { outStream.getTracks().forEach(t => t.stop()); } catch (e) {}
-                try {
-                    framesToRender.forEach((bmp) => { try { bmp.close && bmp.close(); } catch (e) {} });
-                } catch (e) {}
-                timelapseFrames = [];
-                updateTimelapseInfoIdle();
+                void (async () => {
+                    const writableRef = writable;
+                    try {
+                        if (diskMode && writableRef && diskAppender) {
+                            await diskAppender.flush();
+                            await writableRef.close();
+                            writable = null;
+                            showRecordingStatusNotice(t('recordingSavedToDisk'), false);
+                        } else {
+                            const blob = new Blob(chunks, { type: 'video/webm' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            a.download = getTimestamp() + 'timelapse.webm';
+                            document.body.appendChild(a);
+                            a.click();
+                            URL.revokeObjectURL(url);
+                        }
+                    } catch (e) {
+                        console.error('Timelapse export finalize:', e);
+                        showRecordingStatusNotice(t('recordingDiskWriteFailed'), true);
+                        try {
+                            if (writableRef) {
+                                await writableRef.abort();
+                            }
+                        } catch (e2) {}
+                        writable = null;
+                        if (chunks.length > 0) {
+                            try {
+                                const blob = new Blob(chunks, { type: 'video/webm' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.style.display = 'none';
+                                a.href = url;
+                                a.download = getTimestamp() + 'timelapse-fallback.webm';
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            } catch (e3) {}
+                        }
+                    } finally {
+                        try {
+                            outStream.getTracks().forEach((t) => t.stop());
+                        } catch (e) {}
+                        try {
+                            if (storeRef) {
+                                await storeRef.clear();
+                            }
+                        } catch (e) {}
+                        timelapseFrameStore = null;
+                        timelapseExportInProgress = false;
+                        updateTimelapseInfoIdle();
+                    }
+                })();
             };
 
-            recorder.start();
-
-            let idx = 0;
             const frameIntervalMs = Math.max(1, Math.floor(1000 / playbackFps));
-            const renderTimer = setInterval(() => {
-                if (idx >= framesToRender.length) {
-                    clearInterval(renderTimer);
-                    recorder.stop();
-                    return;
+            try {
+                await drawStoredFrameToCanvas(storeRef, 0, outCtx, outCanvas.width, outCanvas.height);
+                updateTimelapseInfoDuringEncoding(1, frameCount, finalRecordSec);
+            } catch (e) {
+                console.error('Timelapse export first frame:', e);
+                if (writable) {
+                    void closeRecordingWritableQuietly(writable);
+                    writable = null;
                 }
-                outCtx.drawImage(framesToRender[idx], 0, 0, outCanvas.width, outCanvas.height);
-                updateTimelapseInfoDuringEncoding(idx + 1, framesToRender.length, finalRecordSec);
-                idx += 1;
-            }, frameIntervalMs);
+                try {
+                    outStream.getTracks().forEach((t) => t.stop());
+                } catch (e2) {}
+                await cleanupTimelapseArtifacts();
+                updateCameraConstraintControlsState();
+                return;
+            }
+
+            try {
+                recorder.start(RECORDING_TIMESLICE_MS);
+            } catch (e) {
+                console.error('Timelapse recorder start failed:', e);
+                timelapseExportInProgress = false;
+                if (writable) {
+                    void closeRecordingWritableQuietly(writable);
+                    writable = null;
+                }
+                try {
+                    outStream.getTracks().forEach((t) => t.stop());
+                } catch (e2) {}
+                await cleanupTimelapseArtifacts();
+                updateCameraConstraintControlsState();
+                return;
+            }
+            if (!diskMode) {
+                maybeShowRecordingMemoryHint();
+            }
+
+            timelapseExportInProgress = true;
+            void (async () => {
+                try {
+                    for (let idx = 1; idx < frameCount; idx++) {
+                        await new Promise((r) => setTimeout(r, frameIntervalMs));
+                        await drawStoredFrameToCanvas(storeRef, idx, outCtx, outCanvas.width, outCanvas.height);
+                        updateTimelapseInfoDuringEncoding(idx + 1, frameCount, finalRecordSec);
+                    }
+                    await new Promise((r) => setTimeout(r, Math.max(120, frameIntervalMs * 2, RECORDING_TIMESLICE_MS * 2)));
+                    try {
+                        if (typeof recorder.requestData === 'function') {
+                            recorder.requestData();
+                        }
+                    } catch (e) {}
+                    recorder.stop();
+                } catch (e) {
+                    console.error('Timelapse encode loop:', e);
+                    try {
+                        recorder.stop();
+                    } catch (e2) {}
+                    timelapseExportInProgress = false;
+                }
+            })();
         }
 
         async function startStreamCapture() {
             try {
-                if (stopMotionFrames.length > 0 || stopMotionEncoding) return;
+                if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
                 // During stream capture, keep the corner camera preview non-mirrored
                 // and prevent changing the mirror state mid-session.
                 if (mirrorToggleButton) mirrorToggleButton.disabled = true;
@@ -4737,6 +6127,49 @@
 
                 const composedStream = new MediaStream(composedStreamTracks);
 
+                const streamDiskSink = await openRecordingDiskSink(getTimestamp() + 'stream.webm');
+                const streamSaveNoticeEl = document.getElementById('recordingStatusNotice');
+                if (streamSaveNoticeEl) {
+                    streamSaveNoticeEl.hidden = true;
+                    streamSaveNoticeEl.textContent = '';
+                }
+                if (streamDiskSink.mode === 'cancelled') {
+                    showRecordingStatusNotice(t('recordingSaveCancelled'), false);
+                    streamRecordingActive = false;
+                    if (streamDrawRequestId) {
+                        cancelAnimationFrame(streamDrawRequestId);
+                        streamDrawRequestId = null;
+                    }
+                    cleanupStreamCaptureArtifacts();
+                    try {
+                        if (screenStream) screenStream.getTracks().forEach((t) => t.stop());
+                    } catch (e) {}
+                    screenStream = null;
+                    if (window.streamNotificationObserver) {
+                        try {
+                            window.streamNotificationObserver.disconnect();
+                        } catch (e) {}
+                        window.streamNotificationObserver = null;
+                    }
+                    if (document.pictureInPictureElement) {
+                        try {
+                            document.exitPictureInPicture();
+                        } catch (e) {}
+                    }
+                    applyStopMotionAuxiliaryLocks();
+                    syncRecordingModeButtons();
+                    return;
+                }
+
+                streamCaptureRecordingDiskMode = streamDiskSink.mode === 'disk';
+                streamCaptureRecordingWritable =
+                    streamDiskSink.mode === 'disk' ? streamDiskSink.writable : null;
+                streamCaptureRecordingOpfsFileHandle = streamDiskSink.fileHandle || null;
+                streamCaptureRecordingOpfsDispose =
+                    typeof streamDiskSink.opfsDispose === 'function' ? streamDiskSink.opfsDispose : null;
+                streamCaptureRecordingDiskWriteQueue = Promise.resolve();
+                streamCaptureChunks = [];
+
                 const streamRecOptions = {
                     mimeType: 'video/webm;codecs=vp9,opus',
                     videoBitsPerSecond: 12000000,
@@ -4747,37 +6180,95 @@
                 }
 
                 streamCaptureRecorder = new MediaRecorder(composedStream, streamRecOptions);
-                streamCaptureChunks = [];
 
                 streamCaptureRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        streamCaptureChunks.push(event.data);
+                    const chunk = event.data;
+                    if (streamCaptureRecordingDiskMode && streamCaptureRecordingWritable) {
+                        queueStreamCaptureDiskWrite(chunk);
+                    } else if (chunk && chunk.size > 0) {
+                        streamCaptureChunks.push(chunk);
                     }
                 };
 
                 streamCaptureRecorder.onstop = () => {
-                    const blob = new Blob(streamCaptureChunks, { type: 'video/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = getTimestamp() + 'stream.webm';
-                    document.body.appendChild(a);
-                    a.click();
-                    URL.revokeObjectURL(url);
-
-                    if (document.pictureInPictureElement) {
-                        document.exitPictureInPicture();
-                    }
-                    cleanupStreamCaptureArtifacts();
+                    void (async () => {
+                        const writableRef = streamCaptureRecordingWritable;
+                        const diskMode = streamCaptureRecordingDiskMode;
+                        try {
+                            if (diskMode && writableRef) {
+                                await streamCaptureRecordingDiskWriteQueue.catch(() => {});
+                                await writableRef.close();
+                                streamCaptureRecordingWritable = null;
+                                streamCaptureRecordingDiskMode = false;
+                                streamCaptureRecordingDiskWriteQueue = Promise.resolve();
+                                const fhLoc = streamCaptureRecordingOpfsFileHandle;
+                                const dispLoc = streamCaptureRecordingOpfsDispose;
+                                streamCaptureRecordingOpfsFileHandle = null;
+                                streamCaptureRecordingOpfsDispose = null;
+                                if (fhLoc) {
+                                    await finalizeOpfsRecordingToDownload(
+                                        fhLoc,
+                                        getTimestamp() + 'stream.webm',
+                                        dispLoc
+                                    );
+                                }
+                            } else {
+                                const blob = new Blob(streamCaptureChunks, { type: 'video/webm' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.style.display = 'none';
+                                a.href = url;
+                                a.download = getTimestamp() + 'stream.webm';
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            }
+                        } catch (e) {
+                            console.error('Stream capture recording finalize:', e);
+                            showRecordingStatusNotice(t('recordingDiskWriteFailed'), true);
+                            try {
+                                if (writableRef) {
+                                    await writableRef.abort();
+                                }
+                            } catch (e2) {}
+                            streamCaptureRecordingWritable = null;
+                            streamCaptureRecordingDiskMode = false;
+                            streamCaptureRecordingDiskWriteQueue = Promise.resolve();
+                            if (streamCaptureRecordingOpfsDispose) {
+                                try {
+                                    await streamCaptureRecordingOpfsDispose();
+                                } catch (e4) {}
+                                streamCaptureRecordingOpfsDispose = null;
+                                streamCaptureRecordingOpfsFileHandle = null;
+                            }
+                            if (streamCaptureChunks.length > 0) {
+                                try {
+                                    const blob = new Blob(streamCaptureChunks, { type: 'video/webm' });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.style.display = 'none';
+                                    a.href = url;
+                                    a.download = getTimestamp() + 'stream-fallback.webm';
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                } catch (e3) {}
+                            }
+                        } finally {
+                            if (document.pictureInPictureElement) {
+                                try {
+                                    document.exitPictureInPicture();
+                                } catch (e) {}
+                            }
+                            cleanupStreamCaptureArtifacts();
+                        }
+                    })();
                 };
 
-                // Handle screen share stop
-                screenStream.getVideoTracks()[0].addEventListener('ended', () => {
-                    stopStreamCapture();
-                });
-
-                streamCaptureRecorder.start();
+                streamCaptureRecorder.start(RECORDING_TIMESLICE_MS);
+                if (!streamCaptureRecordingDiskMode) {
+                    maybeShowRecordingMemoryHint();
+                }
                 toggleStreamCaptureButton.textContent = t('btnStopStream');
                 toggleStreamCaptureButton.classList.add('recording');
                 toggleStreamCaptureButton.setAttribute('aria-pressed', 'true');
@@ -4830,6 +6321,11 @@
                 streamDrawRequestId = null;
             }
             if (wasRecording) {
+                try {
+                    if (typeof streamCaptureRecorder.requestData === 'function') {
+                        streamCaptureRecorder.requestData();
+                    }
+                } catch (e) {}
                 streamCaptureRecorder.stop();
             }
             toggleStreamCaptureButton.textContent = t('btnStartStream');
@@ -4884,6 +6380,22 @@
         function cleanupStreamCaptureArtifacts() {
             try {
                 streamRecordingActive = false;
+                if (streamCaptureRecordingWritable) {
+                    const w = streamCaptureRecordingWritable;
+                    streamCaptureRecordingWritable = null;
+                    streamCaptureRecordingDiskMode = false;
+                    streamCaptureRecordingDiskWriteQueue = Promise.resolve();
+                    void closeRecordingWritableQuietly(w);
+                } else {
+                    streamCaptureRecordingDiskMode = false;
+                    streamCaptureRecordingDiskWriteQueue = Promise.resolve();
+                }
+                if (streamCaptureRecordingOpfsDispose) {
+                    const d = streamCaptureRecordingOpfsDispose;
+                    streamCaptureRecordingOpfsDispose = null;
+                    streamCaptureRecordingOpfsFileHandle = null;
+                    void d().catch(() => {});
+                }
                 if (streamDrawRequestId) {
                     cancelAnimationFrame(streamDrawRequestId);
                     streamDrawRequestId = null;
@@ -5123,11 +6635,27 @@
         if (stopMotionSaveButton) {
             stopMotionSaveButton.addEventListener('click', saveStopMotionVideo);
         }
+        if (stopMotionOverlayToggle) {
+            stopMotionOverlayToggle.addEventListener('click', () => {
+                if (getStopMotionFrameCount() === 0 || stopMotionEncoding) return;
+                stopMotionLastFrameOverlayEnabled = !stopMotionLastFrameOverlayEnabled;
+                syncStopMotionOverlayToggleVisual();
+                applyStopMotionAuxiliaryLocks();
+                void refreshStopMotionOverlayPreview();
+            });
+        }
+        if (stopMotionDiscardLastButton) {
+            stopMotionDiscardLastButton.addEventListener('click', () => {
+                void discardStopMotionLastFrame();
+            });
+        }
         if (stopMotionExportFpsInput) {
             stopMotionExportFpsInput.addEventListener('input', updateStopMotionUi);
             stopMotionExportFpsInput.addEventListener('change', updateStopMotionUi);
         }
         updateStopMotionUi();
+        syncStopMotionOverlayToggleVisual();
+        syncStopMotionOverlayOpacityGroupVisibility();
 
         mirrorToggleButton.addEventListener('click', () => {
             mirrorFeed = !mirrorFeed;
@@ -5162,6 +6690,12 @@
                 applyDigitalZoomFromSlider();
             });
         }
+        if (stopMotionOverlayOpacitySlider) {
+            stopMotionOverlayOpacitySlider.addEventListener('input', () => {
+                applyStopMotionOverlayOpacityFromSlider();
+            });
+        }
+        applyStopMotionOverlayOpacityFromSlider();
 
         if (zoomColumn && zoomSlider) {
             zoomColumn.addEventListener(
