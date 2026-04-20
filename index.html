@@ -3759,6 +3759,7 @@
             }
             stopMotionOverlayImg.removeAttribute('src');
             stopMotionOverlayImg.hidden = true;
+            stopMotionOverlayImg.style.transform = 'scaleX(1)';
             if (
                 !stopMotionLastFrameOverlayEnabled ||
                 !stopMotionFrameStore ||
@@ -3788,7 +3789,8 @@
                 stopMotionOverlayObjectUrl = url;
                 stopMotionOverlayImg.src = url;
                 stopMotionOverlayImg.hidden = false;
-                stopMotionOverlayImg.style.transform = mirrorFeed ? 'scaleX(-1)' : 'scaleX(1)';
+                /* Frame bitmaps already encode mirror at capture; live mirrorFeed only affects #video for the next shot. */
+                stopMotionOverlayImg.style.transform = 'scaleX(1)';
                 applyStopMotionOverlayOpacityFromSlider();
             } catch (e) {
                 console.warn('Stop motion overlay preview:', e);
