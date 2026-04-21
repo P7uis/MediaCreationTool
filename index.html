@@ -672,10 +672,34 @@
         #takePhoto {
             background-color: #007bff;
         }
-        #recordButton {
+        .camera-action-row button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35em;
+            flex-wrap: wrap;
+        }
+        .camera-action-row .camera-rec-elapsed {
+            font-variant-numeric: tabular-nums;
+            opacity: 0.95;
+        }
+        #recordStartButton {
             background-color: #28a745;
         }
-        #recordButton.recording {
+        #recordStartButton.camera-start-btn--pause,
+        #recordStartButton.camera-start-btn--resume {
+            background-color: #fd7e14;
+            color: #fff;
+        }
+        #recordStartButton.camera-start-btn--pause:hover:not(:disabled),
+        #recordStartButton.camera-start-btn--resume:hover:not(:disabled) {
+            background-color: #ea580c;
+        }
+        #recordStartButton.camera-start-btn--pause:active:not(:disabled),
+        #recordStartButton.camera-start-btn--resume:active:not(:disabled) {
+            background-color: #c2410c;
+        }
+        #recordStopButton {
             background-color: #dc3545;
         }
         #toggleStreamCapture {
@@ -771,22 +795,37 @@
             background-color: #003670;
         }
 
-        html.mc-theme-dark #recordButton {
+        html.mc-theme-dark #recordStartButton {
             background-color: #185f2a;
         }
-        html.mc-theme-dark #recordButton:hover {
+        html.mc-theme-dark #recordStartButton:hover:not(:disabled) {
             background-color: #134f24;
         }
-        html.mc-theme-dark #recordButton:active {
+        html.mc-theme-dark #recordStartButton:active:not(:disabled) {
             background-color: #0f421e;
         }
-        html.mc-theme-dark #recordButton.recording {
+
+        html.mc-theme-dark #recordStartButton.camera-start-btn--pause,
+        html.mc-theme-dark #recordStartButton.camera-start-btn--resume {
+            background-color: #c2410c;
+            color: #fef3e8;
+        }
+        html.mc-theme-dark #recordStartButton.camera-start-btn--pause:hover:not(:disabled),
+        html.mc-theme-dark #recordStartButton.camera-start-btn--resume:hover:not(:disabled) {
+            background-color: #9a3412;
+        }
+        html.mc-theme-dark #recordStartButton.camera-start-btn--pause:active:not(:disabled),
+        html.mc-theme-dark #recordStartButton.camera-start-btn--resume:active:not(:disabled) {
+            background-color: #7c2d12;
+        }
+
+        html.mc-theme-dark #recordStopButton {
             background-color: #8b222c;
         }
-        html.mc-theme-dark #recordButton.recording:hover {
+        html.mc-theme-dark #recordStopButton:hover:not(:disabled) {
             background-color: #731d26;
         }
-        html.mc-theme-dark #recordButton.recording:active {
+        html.mc-theme-dark #recordStopButton:active:not(:disabled) {
             background-color: #5f181f;
         }
 
@@ -1932,13 +1971,19 @@
                 <div class="controls">
             <div class="button-group">
                 <button type="button" id="switchCamera" data-i18n="btnSwitchCamera" data-i18n-aria="ariaSwitchCamera">Wissel camera</button>
-                <button type="button" id="switchMic" data-i18n="btnSwitchMic" data-i18n-aria="ariaSwitchMic">Wissel microfoon</button>
-                <button type="button" id="takePhoto" data-i18n="btnTakePhoto" data-i18n-aria="ariaTakePhoto">Foto maken</button>
-                <button type="button" id="recordButton" data-i18n="btnStartRecord" data-i18n-aria="ariaRecordCamera">Start opname</button>
-            </div>
-            <div class="button-group">
                 <button type="button" id="mirrorToggle" data-i18n-aria="ariaMirror"><span id="mirrorToggleText" data-i18n="btnMirror">Spiegelen</span></button>
+                <button type="button" id="switchMic" data-i18n="btnSwitchMic" data-i18n-aria="ariaSwitchMic">Wissel microfoon</button>
                 <button type="button" id="muteToggle" data-i18n-aria="ariaMute"><span id="muteToggleText" data-i18n="micOn">Microfoon aan</span></button>
+            </div>
+            <div class="button-group camera-action-row" id="cameraActionRow">
+                <button type="button" id="takePhoto" data-i18n="btnTakePhoto" data-i18n-aria="ariaTakePhoto">Foto maken</button>
+                <button type="button" id="recordStartButton" data-i18n-aria="ariaCameraRecordStart" aria-pressed="false">
+                    <span id="recordStartButtonLabel" data-i18n="btnStartRecord">Start opname</span>
+                </button>
+                <button type="button" id="recordStopButton" data-i18n-aria="ariaCameraRecordStopOnly" disabled>
+                    <span data-i18n="btnStopRecord">Stop opname</span>
+                    <span class="camera-rec-elapsed" aria-hidden="true">00:00:00</span>
+                </button>
             </div>
             <div class="button-group">
                 <button type="button" id="toggleScreenRecording" data-i18n="btnStartScreen" data-i18n-aria="ariaScreenRecord">Start schermopname</button>
@@ -2020,7 +2065,10 @@
 
     <script>
         const video = document.getElementById('video');
-        const recordButton = document.getElementById('recordButton');
+        const recordStartButton = document.getElementById('recordStartButton');
+        const recordStartButtonLabel = document.getElementById('recordStartButtonLabel');
+        const recordStopButton = document.getElementById('recordStopButton');
+        const cameraActionRow = document.getElementById('cameraActionRow');
         const takePhotoButton = document.getElementById('takePhoto');
         const switchCameraButton = document.getElementById('switchCamera');
         const switchMicButton = document.getElementById('switchMic');
@@ -2092,7 +2140,13 @@
                 ariaTakePhoto: 'Foto maken van video',
                 btnStartRecord: 'Start opname',
                 btnStopRecord: 'Stop opname',
+                btnPauseRecording: 'Pauzeer opname',
+                btnResumeRecording: 'Hervat opname',
                 ariaRecordCamera: 'Camera-opname starten of stoppen',
+                ariaCameraRecordStart: 'Camera-opname starten',
+                ariaCameraRecordPauseToggle: 'Camera-opname pauzeren',
+                ariaCameraRecordResume: 'Camera-opname hervatten',
+                ariaCameraRecordStopOnly: 'Camera-opname stoppen en opslaan',
                 btnMirror: 'Spiegelen',
                 ariaMirror: 'Spiegelen',
                 micOn: 'Microfoon aan',
@@ -2177,7 +2231,13 @@
                 ariaTakePhoto: 'Take photo from video',
                 btnStartRecord: 'Start recording',
                 btnStopRecord: 'Stop recording',
+                btnPauseRecording: 'Pause recording',
+                btnResumeRecording: 'Resume recording',
                 ariaRecordCamera: 'Start or stop camera recording',
+                ariaCameraRecordStart: 'Start camera recording',
+                ariaCameraRecordPauseToggle: 'Pause camera recording',
+                ariaCameraRecordResume: 'Resume camera recording',
+                ariaCameraRecordStopOnly: 'Stop camera recording and save',
                 btnMirror: 'Mirror',
                 ariaMirror: 'Mirror preview',
                 micOn: 'Mic on',
@@ -2262,7 +2322,13 @@
                 ariaTakePhoto: 'Foto aus Video aufnehmen',
                 btnStartRecord: 'Aufnahme starten',
                 btnStopRecord: 'Aufnahme stoppen',
+                btnPauseRecording: 'Aufnahme pausieren',
+                btnResumeRecording: 'Aufnahme fortsetzen',
                 ariaRecordCamera: 'Kameraaufnahme starten oder stoppen',
+                ariaCameraRecordStart: 'Kameraaufnahme starten',
+                ariaCameraRecordPauseToggle: 'Kameraaufnahme pausieren',
+                ariaCameraRecordResume: 'Kameraaufnahme fortsetzen',
+                ariaCameraRecordStopOnly: 'Kameraaufnahme stoppen und speichern',
                 btnMirror: 'Spiegeln',
                 ariaMirror: 'Vorschau spiegeln',
                 micOn: 'Mikrofon an',
@@ -2355,11 +2421,6 @@
         }
 
         function syncRecordingButtonLabels() {
-            if (recordButton) {
-                recordButton.textContent = recordButton.classList.contains('recording')
-                    ? t('btnStopRecord')
-                    : t('btnStartRecord');
-            }
             if (toggleScreenRecordingButton) {
                 toggleScreenRecordingButton.textContent = toggleScreenRecordingButton.classList.contains('recording')
                     ? t('btnStopScreen')
@@ -2415,6 +2476,7 @@
             });
 
             syncRecordingButtonLabels();
+            syncCameraRecordingRowControls();
             if (typeof updateStopMotionUi === 'function') updateStopMotionUi();
             if (typeof syncStopMotionOverlayToggleVisual === 'function') syncStopMotionOverlayToggleVisual();
             if (typeof syncStopMotionOverlayOpacityGroupVisibility === 'function') {
@@ -2790,7 +2852,7 @@
         // Recording mode buttons: exactly one of camera/screen/stream/audio may run at a time.
         // Timelapse may run in parallel; starting timelapse is blocked while a primary recorder is active.
         const recordingTypeButtons = [
-            recordButton,
+            recordStartButton,
             toggleScreenRecordingButton,
             toggleStreamCaptureButton,
             toggleAudioRecordingButton,
@@ -2881,6 +2943,10 @@
         const RECORDING_TIMESLICE_MS = 500;
         let recordingStatusNoticeTimer = null;
         let recordingMemoryHintShown = false;
+
+        let cameraRecordClockTimer = null;
+        let cameraRecordElapsedBaseMs = 0;
+        let cameraRecordSegmentStartMs = 0;
 
         let cameraRecordingDiskMode = false;
         let cameraRecordingWritable = null;
@@ -3340,7 +3406,7 @@
         }
 
         function getPrimaryRecordingActiveButton() {
-            if (cameraRecordingActive) return recordButton;
+            if (cameraRecordingActive) return recordStartButton;
             if (screenMediaRecorder && screenMediaRecorder.state === 'recording') {
                 return toggleScreenRecordingButton;
             }
@@ -3351,6 +3417,116 @@
                 return toggleAudioRecordingButton;
             }
             return null;
+        }
+
+        function resetCameraRecordingElapsedClock() {
+            if (cameraRecordClockTimer) {
+                clearInterval(cameraRecordClockTimer);
+                cameraRecordClockTimer = null;
+            }
+            cameraRecordElapsedBaseMs = 0;
+            cameraRecordSegmentStartMs = 0;
+        }
+
+        function getCameraRecordingElapsedSeconds() {
+            if (!cameraRecordingActive || !mediaRecorder) return 0;
+            const st = mediaRecorder.state;
+            if (st === 'inactive') return 0;
+            let extra = 0;
+            if (st === 'recording') {
+                extra = Date.now() - cameraRecordSegmentStartMs;
+            }
+            return (cameraRecordElapsedBaseMs + extra) / 1000;
+        }
+
+        function updateCameraRecordingElapsedDisplays() {
+            if (!cameraActionRow) return;
+            const els = cameraActionRow.querySelectorAll('.camera-rec-elapsed');
+            const sec = cameraRecordingActive ? getCameraRecordingElapsedSeconds() : 0;
+            const txt = formatTimelapseHmsTriple(sec);
+            els.forEach((el) => {
+                el.textContent = txt;
+            });
+        }
+
+        function startCameraRecordingElapsedClock() {
+            resetCameraRecordingElapsedClock();
+            cameraRecordSegmentStartMs = Date.now();
+            cameraRecordClockTimer = setInterval(updateCameraRecordingElapsedDisplays, 250);
+            updateCameraRecordingElapsedDisplays();
+        }
+
+        function markCameraRecordingPausedSegment() {
+            cameraRecordElapsedBaseMs += Date.now() - cameraRecordSegmentStartMs;
+        }
+
+        function markCameraRecordingResumedSegment() {
+            cameraRecordSegmentStartMs = Date.now();
+        }
+
+        function syncCameraRecordingRowControls() {
+            const pauseSupported =
+                typeof MediaRecorder !== 'undefined' &&
+                typeof MediaRecorder.prototype.pause === 'function' &&
+                typeof MediaRecorder.prototype.resume === 'function';
+
+            updateCameraRecordingElapsedDisplays();
+
+            const st = mediaRecorder && cameraRecordingActive ? mediaRecorder.state : 'inactive';
+
+            if (recordStartButtonLabel) {
+                if (st === 'recording') {
+                    recordStartButtonLabel.textContent = t('btnPauseRecording');
+                } else if (st === 'paused') {
+                    recordStartButtonLabel.textContent = t('btnResumeRecording');
+                } else {
+                    recordStartButtonLabel.textContent = t('btnStartRecord');
+                }
+            }
+
+            if (recordStartButton) {
+                recordStartButton.classList.remove('camera-start-btn--pause', 'camera-start-btn--resume');
+                if (st === 'recording') {
+                    recordStartButton.classList.add('camera-start-btn--pause');
+                } else if (st === 'paused') {
+                    recordStartButton.classList.add('camera-start-btn--resume');
+                }
+                const camSession = st === 'recording' || st === 'paused';
+                recordStartButton.setAttribute('aria-pressed', camSession ? 'true' : 'false');
+                let ariaKey = 'ariaCameraRecordStart';
+                if (st === 'recording') {
+                    ariaKey = 'ariaCameraRecordPauseToggle';
+                } else if (st === 'paused') {
+                    ariaKey = 'ariaCameraRecordResume';
+                }
+                recordStartButton.setAttribute('aria-label', t(ariaKey));
+            }
+
+            const camSession =
+                cameraRecordingActive &&
+                mediaRecorder &&
+                (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused');
+
+            if (recordStopButton) {
+                recordStopButton.disabled = !camSession;
+            }
+        }
+
+        function pauseOrResumeCameraRecording() {
+            if (!mediaRecorder || !cameraRecordingActive) return;
+            try {
+                if (mediaRecorder.state === 'recording') {
+                    if (typeof mediaRecorder.pause !== 'function') return;
+                    mediaRecorder.pause();
+                    markCameraRecordingPausedSegment();
+                } else if (mediaRecorder.state === 'paused') {
+                    mediaRecorder.resume();
+                    markCameraRecordingResumedSegment();
+                }
+            } catch (e) {
+                console.warn('pause/resume camera recording:', e);
+            }
+            syncCameraRecordingRowControls();
         }
 
         function stopMotionLockActive() {
@@ -3409,6 +3585,10 @@
         function syncRecordingModeButtons() {
             const primaryBtn = getPrimaryRecordingActiveButton();
             const smLock = stopMotionLockActive();
+            const pauseSupported =
+                typeof MediaRecorder !== 'undefined' &&
+                typeof MediaRecorder.prototype.pause === 'function' &&
+                typeof MediaRecorder.prototype.resume === 'function';
             recordingTypeButtons.forEach((btn) => {
                 if (btn === toggleTimelapseButton) {
                     btn.disabled = smLock || (primaryBtn != null && !timelapseCapturing);
@@ -3416,6 +3596,15 @@
                     btn.disabled = smLock || (primaryBtn != null && btn !== primaryBtn);
                 }
             });
+            if (
+                recordStartButton &&
+                cameraRecordingActive &&
+                mediaRecorder &&
+                mediaRecorder.state === 'recording' &&
+                !pauseSupported
+            ) {
+                recordStartButton.disabled = true;
+            }
             applyStopMotionAuxiliaryLocks();
         }
 
@@ -4162,6 +4351,10 @@
                 
                 const drawFrame = () => {
                     if (!cameraRecordingActive || !cameraRecordingCtx) return;
+                    if (mediaRecorder && mediaRecorder.state === 'paused') {
+                        cameraDrawRequestId = requestAnimationFrame(drawFrame);
+                        return;
+                    }
                     cameraRecordingCtx.clearRect(0, 0, w, h);
                     drawVideoWithDigitalZoom(cameraRecordingCtx, w, h);
                     cameraDrawRequestId = requestAnimationFrame(drawFrame);
@@ -4169,9 +4362,8 @@
 
                 cameraDrawRequestId = requestAnimationFrame(drawFrame);
 
-                recordButton.textContent = t('btnStopRecord');
-                recordButton.classList.add('recording');
-                recordButton.setAttribute('aria-pressed', 'true');
+                startCameraRecordingElapsedClock();
+                syncCameraRecordingRowControls();
                 syncRecordingModeButtons();
             } catch (err) {
                 console.error("Error starting recording: " + err);
@@ -4180,7 +4372,10 @@
         }
 
         function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
+            if (
+                mediaRecorder &&
+                (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')
+            ) {
                 try {
                     if (typeof mediaRecorder.requestData === 'function') {
                         mediaRecorder.requestData();
@@ -4195,9 +4390,12 @@
                 cameraDrawRequestId = null;
             }
 
-            recordButton.textContent = t('btnStartRecord');
-            recordButton.classList.remove('recording');
-            recordButton.setAttribute('aria-pressed', 'false');
+            resetCameraRecordingElapsedClock();
+            updateCameraRecordingElapsedDisplays();
+            if (recordStartButton) {
+                recordStartButton.setAttribute('aria-pressed', 'false');
+            }
+            syncCameraRecordingRowControls();
             syncRecordingModeButtons();
             updateCameraConstraintControlsState();
         }
@@ -4205,6 +4403,12 @@
         function cleanupCameraRecordingArtifacts() {
             try {
                 cameraRecordingActive = false;
+                resetCameraRecordingElapsedClock();
+                updateCameraRecordingElapsedDisplays();
+                if (recordStartButton) {
+                    recordStartButton.setAttribute('aria-pressed', 'false');
+                }
+                syncCameraRecordingRowControls();
                 if (cameraRecordingWritable) {
                     const w = cameraRecordingWritable;
                     cameraRecordingWritable = null;
@@ -6574,13 +6778,24 @@
             }
         });
 
-        recordButton.addEventListener('click', () => {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
+        if (recordStartButton) {
+            recordStartButton.addEventListener('click', () => {
+                const idle =
+                    !cameraRecordingActive ||
+                    !mediaRecorder ||
+                    mediaRecorder.state === 'inactive';
+                if (idle) {
+                    startRecording();
+                } else {
+                    pauseOrResumeCameraRecording();
+                }
+            });
+        }
+        if (recordStopButton) {
+            recordStopButton.addEventListener('click', () => {
                 stopRecording();
-            } else {
-                startRecording();
-            }
-        });
+            });
+        }
 
         takePhotoButton.addEventListener('click', takePhoto);
 
