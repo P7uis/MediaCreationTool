@@ -3643,6 +3643,8 @@
         let currentCameraIndex = 0;
         let currentMicIndex = 0;
         let mirrorFeed = false;
+        /** True when mirror was on before stream capture and we temporarily cleared it for the UI. */
+        let streamCaptureRestoreMirrorFeedAfterSession = false;
         let isMutedVideoAudio = false;
         let currentCameraDeviceId = null;
         let currentMicDeviceId = null;
@@ -3760,6 +3762,22 @@
             mirrorToggleText.style.display = 'inline-block';
             mirrorToggleText.style.transform = mirrorFeed ? 'scaleX(-1)' : 'scaleX(1)';
             mirrorToggleButton.classList.toggle('mirrored', mirrorFeed);
+        }
+
+        function disableMirrorFeedForStreamCaptureSessionStart() {
+            streamCaptureRestoreMirrorFeedAfterSession = mirrorFeed;
+            if (!mirrorFeed) return;
+            mirrorFeed = false;
+            updateMirroring();
+            updateMirrorToggleUI();
+        }
+
+        function restoreMirrorFeedAfterStreamCaptureSessionEnd() {
+            if (!streamCaptureRestoreMirrorFeedAfterSession) return;
+            streamCaptureRestoreMirrorFeedAfterSession = false;
+            mirrorFeed = true;
+            updateMirroring();
+            updateMirrorToggleUI();
         }
 
         function updateMuteToggleUI() {
@@ -6089,6 +6107,7 @@
         async function startStreamCapture() {
             try {
                 if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
+                disableMirrorFeedForStreamCaptureSessionStart();
                 // During stream capture, keep the corner camera preview non-mirrored
                 // and prevent changing the mirror state mid-session.
                 if (mirrorToggleButton) mirrorToggleButton.disabled = true;
@@ -6339,6 +6358,7 @@
                     }
                     applyStopMotionAuxiliaryLocks();
                     syncRecordingModeButtons();
+                    restoreMirrorFeedAfterStreamCaptureSessionEnd();
                     return;
                 }
 
@@ -6462,6 +6482,7 @@
             } catch (err) {
                 console.error("Error starting stream capture: " + err);
                 applyStopMotionAuxiliaryLocks();
+                restoreMirrorFeedAfterStreamCaptureSessionEnd();
                 if (window.streamNotificationObserver) {
                     window.streamNotificationObserver.disconnect();
                 }
@@ -6542,6 +6563,7 @@
             streamCaptureCameraDrawVideoEl = null;
 
             applyStopMotionAuxiliaryLocks();
+            restoreMirrorFeedAfterStreamCaptureSessionEnd();
         }
 
         function cleanupStreamCaptureArtifacts() {
