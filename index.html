@@ -2017,7 +2017,7 @@
                 <div class="timelapse-settings" data-i18n-aria="ariaTimelapseSettings">
                     <label>
                         <span data-i18n="labelTimelapseInterval">Interval (s)</span>
-                        <input id="timelapseInterval" type="number" min="1" step="1" value="1">
+                        <input id="timelapseInterval" type="number" min="0.01" step="0.01" value="1">
                     </label>
                     <label>
                         <span class="timelapse-duration-label">
@@ -5902,13 +5902,13 @@
         }
 
         function getTimelapseParsedSettings() {
-            let intervalSec = parseInt(timelapseIntervalInput && timelapseIntervalInput.value, 10);
+            let intervalSec = parseFloat(timelapseIntervalInput && timelapseIntervalInput.value);
             let durationSec = parseTimelapseDurationToSeconds(timelapseDurationInput && timelapseDurationInput.value);
             let fps = parseInt(timelapsePlaybackFpsInput && timelapsePlaybackFpsInput.value, 10);
             if (Number.isNaN(intervalSec)) intervalSec = 1;
             if (Number.isNaN(durationSec)) durationSec = 30 * 60;
             if (Number.isNaN(fps)) fps = 30;
-            intervalSec = Math.max(1, intervalSec);
+            intervalSec = Math.max(0.01, intervalSec);
             durationSec = Math.max(intervalSec, durationSec);
             fps = Math.max(5, fps);
             const targetFrames = Math.max(2, Math.floor(durationSec / intervalSec) + 1);
