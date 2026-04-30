@@ -722,8 +722,11 @@
         }
         #toggleTimelapse {
             background-color: #6c757d;
-            flex: 1 1 0;
+            flex: 0 1 123px;
             min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         #toggleTimelapse:hover:not(:disabled) {
             background-color: #5c636a;
@@ -980,8 +983,10 @@
             min-width: 0;
             margin: 0 5px;
             min-height: 40px;
+            height: 40px;
+            max-height: 40px;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             align-content: center;
             justify-content: flex-start;
@@ -991,8 +996,7 @@
             background: var(--mc-tl-bg);
             border: 1px solid var(--mc-tl-border);
             box-sizing: border-box;
-            overflow-x: auto;
-            overflow-y: visible;
+            overflow: hidden;
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .timelapse-info-wrap {
@@ -1064,6 +1068,16 @@
             color: var(--mc-tl-label);
             white-space: nowrap;
         }
+        .timelapse-duration-label {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.1;
+        }
+        .timelapse-duration-format {
+            font-size: 11px;
+            opacity: 0.8;
+        }
         .timelapse-settings input {
             width: 64px;
             height: 28px;
@@ -1073,6 +1087,9 @@
             background: var(--mc-input-bg);
             color: var(--mc-input-text);
             box-sizing: border-box;
+        }
+        #timelapseDuration {
+            width: 75px;
         }
 
         .stopmotion-row {
@@ -1606,13 +1623,15 @@
                 line-height: 1.1;
             }
             .button-group.timelapse-row > #toggleTimelapse {
-                flex: 1 1 0;
+                flex: 0 1 90px;
                 min-width: 0;
             }
             .timelapse-settings {
                 flex: 3 1 0;
                 margin: 0 4px;
                 min-height: 30px;
+                height: 30px;
+                max-height: 30px;
                 padding: 4px 8px;
                 gap: 4px 6px;
                 min-width: 0;
@@ -1628,6 +1647,9 @@
                 padding: 0 4px;
                 font-size: 10px;
                 border-radius: 3px;
+            }
+            #timelapseDuration {
+                width: 56px;
             }
             .timelapse-info-wrap {
                 min-height: 30px;
@@ -1995,11 +2017,14 @@
                 <div class="timelapse-settings" data-i18n-aria="ariaTimelapseSettings">
                     <label>
                         <span data-i18n="labelTimelapseInterval">Interval (s)</span>
-                        <input id="timelapseInterval" type="number" min="1" step="1" value="2">
+                        <input id="timelapseInterval" type="number" min="1" step="1" value="1">
                     </label>
                     <label>
-                        <span data-i18n="labelFrames">Frames</span>
-                        <input id="timelapseFrames" type="number" min="2" step="1" value="601">
+                        <span class="timelapse-duration-label">
+                            <span data-i18n="labelTimelapseDuration">Opnametijd</span>
+                            <span class="timelapse-duration-format">(hh:mm:ss)</span>
+                        </span>
+                        <input id="timelapseDuration" type="text" inputmode="numeric" value="00:30:00" placeholder="00:30:00">
                     </label>
                     <label>
                         <span data-i18n="labelPlaybackFps">Afspelen (fps)</span>
@@ -2011,7 +2036,7 @@
                 <div class="timelapse-info-panel" id="timelapseInfoPanel" aria-live="polite">
                     <div class="timelapse-info-row">
                         <span class="timelapse-info-label" data-i18n="labelFrames">Frames</span>
-                        <strong id="timelapseInfoFrames" class="timelapse-info-value">000 / 601</strong>
+                        <strong id="timelapseInfoFrames" class="timelapse-info-value">0000 / 1801</strong>
                     </div>
                     <div class="timelapse-info-row">
                         <span class="timelapse-info-label" data-i18n="labelTimelapseRecord">Opname</span>
@@ -2081,7 +2106,7 @@
         const toggleStreamCaptureButton = document.getElementById('toggleStreamCapture');
         const toggleTimelapseButton = document.getElementById('toggleTimelapse');
         const timelapseIntervalInput = document.getElementById('timelapseInterval');
-        const timelapseFramesInput = document.getElementById('timelapseFrames');
+        const timelapseDurationInput = document.getElementById('timelapseDuration');
         const timelapsePlaybackFpsInput = document.getElementById('timelapsePlaybackFps');
         const timelapseInfoFrames = document.getElementById('timelapseInfoFrames');
         const timelapseInfoRecord = document.getElementById('timelapseInfoRecord');
@@ -2163,10 +2188,13 @@
                 ariaAudioRecord: 'Alleen-audio-opname starten of stoppen',
                 btnStartTimelapse: 'Start timelapse',
                 btnStopTimelapse: 'Stop timelapse',
+                btnStartTimelapseShort: 'Timelapse',
+                btnStopTimelapseShort: 'Stop',
                 ariaTimelapse: 'Timelapse starten of stoppen',
                 ariaTimelapseSettings: 'Timelapse-instellingen',
                 labelTimelapseInterval: 'Interval (s)',
                 labelFrames: 'Frames',
+                labelTimelapseDuration: 'Opnametijd',
                 labelPlaybackFps: 'Afspelen (fps)',
                 ariaTimelapseProgress: 'Timelapse-voortgang',
                 labelTimelapseRecord: 'Opname',
@@ -2254,10 +2282,13 @@
                 ariaAudioRecord: 'Start or stop audio-only recording',
                 btnStartTimelapse: 'Start timelapse',
                 btnStopTimelapse: 'Stop timelapse',
+                btnStartTimelapseShort: 'Timelapse',
+                btnStopTimelapseShort: 'Stop',
                 ariaTimelapse: 'Start or stop timelapse',
                 ariaTimelapseSettings: 'Timelapse settings',
                 labelTimelapseInterval: 'Interval (s)',
                 labelFrames: 'Frames',
+                labelTimelapseDuration: 'Recording time',
                 labelPlaybackFps: 'Playback (fps)',
                 ariaTimelapseProgress: 'Timelapse progress',
                 labelTimelapseRecord: 'Recording',
@@ -2345,10 +2376,13 @@
                 ariaAudioRecord: 'Nur-Audio-Aufnahme starten oder stoppen',
                 btnStartTimelapse: 'Zeitraffer starten',
                 btnStopTimelapse: 'Zeitraffer stoppen',
+                btnStartTimelapseShort: 'Zeitraffer',
+                btnStopTimelapseShort: 'Stop',
                 ariaTimelapse: 'Zeitraffer starten oder stoppen',
                 ariaTimelapseSettings: 'Zeitraffer-Einstellungen',
                 labelTimelapseInterval: 'Intervall (s)',
                 labelFrames: 'Frames',
+                labelTimelapseDuration: 'Aufnahmezeit',
                 labelPlaybackFps: 'Wiedergabe (fps)',
                 ariaTimelapseProgress: 'Zeitraffer-Fortschritt',
                 labelTimelapseRecord: 'Aufnahme',
@@ -2437,10 +2471,21 @@
                     : t('btnStartAudio');
             }
             if (toggleTimelapseButton) {
-                toggleTimelapseButton.textContent = toggleTimelapseButton.classList.contains('recording')
-                    ? t('btnStopTimelapse')
-                    : t('btnStartTimelapse');
+                updateTimelapseButtonLabel();
             }
+        }
+
+        function updateTimelapseButtonLabel() {
+            if (!toggleTimelapseButton) return;
+            const isRecording = toggleTimelapseButton.classList.contains('recording');
+            const fullKey = isRecording ? 'btnStopTimelapse' : 'btnStartTimelapse';
+            const shortKey = isRecording ? 'btnStopTimelapseShort' : 'btnStartTimelapseShort';
+            toggleTimelapseButton.textContent = t(fullKey);
+            // If the full label does not fit, fall back to the compact localized label.
+            if (toggleTimelapseButton.scrollWidth > toggleTimelapseButton.clientWidth + 1) {
+                toggleTimelapseButton.textContent = t(shortKey);
+            }
+            toggleTimelapseButton.title = t(fullKey);
         }
 
         function updateAndroidUsbHintVisibility() {
@@ -2981,11 +3026,11 @@
         let timelapseRecordClockTimer = null;
         /** Snapshot of settings when a timelapse session starts (denominators while capturing / encoding). */
         let timelapseSessionCache = {
-            targetFrames: 601,
-            intervalSec: 2,
+            targetFrames: 1801,
+            intervalSec: 1,
             fps: 30,
-            recordPlanSec: 1200,
-            playbackPlanSec: 20
+            recordPlanSec: 1800,
+            playbackPlanSec: 60
         };
 
         let stopMotionFrameStore = null;
@@ -3679,7 +3724,7 @@
             if (muteToggleButton) muteToggleButton.disabled = smLock;
 
             if (timelapseIntervalInput) timelapseIntervalInput.disabled = smLock;
-            if (timelapseFramesInput) timelapseFramesInput.disabled = smLock;
+            if (timelapseDurationInput) timelapseDurationInput.disabled = smLock;
             if (timelapsePlaybackFpsInput) timelapsePlaybackFpsInput.disabled = smLock;
 
             if (timelapseInfoWrap) {
@@ -5858,17 +5903,28 @@
 
         function getTimelapseParsedSettings() {
             let intervalSec = parseInt(timelapseIntervalInput && timelapseIntervalInput.value, 10);
-            let frames = parseInt(timelapseFramesInput && timelapseFramesInput.value, 10);
+            let durationSec = parseTimelapseDurationToSeconds(timelapseDurationInput && timelapseDurationInput.value);
             let fps = parseInt(timelapsePlaybackFpsInput && timelapsePlaybackFpsInput.value, 10);
-            if (Number.isNaN(intervalSec)) intervalSec = 2;
-            if (Number.isNaN(frames)) frames = 601;
+            if (Number.isNaN(intervalSec)) intervalSec = 1;
+            if (Number.isNaN(durationSec)) durationSec = 30 * 60;
             if (Number.isNaN(fps)) fps = 30;
             intervalSec = Math.max(1, intervalSec);
-            frames = Math.max(2, frames);
+            durationSec = Math.max(intervalSec, durationSec);
             fps = Math.max(5, fps);
-            const recordPlanSec = (frames - 1) * intervalSec;
-            const playbackPlanSec = frames / fps;
-            return { intervalSec, frames, fps, recordPlanSec, playbackPlanSec };
+            const targetFrames = Math.max(2, Math.floor(durationSec / intervalSec) + 1);
+            const recordPlanSec = (targetFrames - 1) * intervalSec;
+            const playbackPlanSec = targetFrames / fps;
+            return { intervalSec, durationSec, targetFrames, fps, recordPlanSec, playbackPlanSec };
+        }
+
+        function parseTimelapseDurationToSeconds(value) {
+            const raw = String(value || '').trim();
+            const m = raw.match(/^(\d{1,4}):([0-5]\d):([0-5]\d)$/);
+            if (!m) return NaN;
+            const hours = parseInt(m[1], 10);
+            const minutes = parseInt(m[2], 10);
+            const seconds = parseInt(m[3], 10);
+            return hours * 3600 + minutes * 60 + seconds;
         }
 
         function formatTimelapseHmsTriple(seconds) {
@@ -5895,7 +5951,7 @@
             }
             timelapseRecordStartTime = 0;
             const p = getTimelapseParsedSettings();
-            if (timelapseInfoFrames) timelapseInfoFrames.textContent = formatTimelapseFrameCounter(0, p.frames);
+            if (timelapseInfoFrames) timelapseInfoFrames.textContent = formatTimelapseFrameCounter(0, p.targetFrames);
             if (timelapseInfoRecord) {
                 timelapseInfoRecord.textContent = `${formatTimelapseHmsTriple(0)} / ${formatTimelapseHmsTriple(p.recordPlanSec)}`;
             }
@@ -5940,9 +5996,10 @@
             if (timelapseExportInProgress) return;
             if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
 
-            const intervalSeconds = Math.max(1, parseInt(timelapseIntervalInput.value || '2', 10));
-            const targetFrames = Math.max(2, parseInt(timelapseFramesInput.value || '601', 10));
-            const playbackFps = Math.max(5, parseInt(timelapsePlaybackFpsInput.value || '30', 10));
+            const parsed = getTimelapseParsedSettings();
+            const intervalSeconds = parsed.intervalSec;
+            const targetFrames = parsed.targetFrames;
+            const playbackFps = parsed.fps;
 
             await cleanupTimelapseArtifacts();
             timelapseFrameStore = await createFrameStore('tl');
@@ -5950,8 +6007,8 @@
                 targetFrames,
                 intervalSec: intervalSeconds,
                 fps: playbackFps,
-                recordPlanSec: (targetFrames - 1) * intervalSeconds,
-                playbackPlanSec: targetFrames / playbackFps
+                recordPlanSec: parsed.recordPlanSec,
+                playbackPlanSec: parsed.playbackPlanSec
             };
 
             timelapseCapturing = true;
@@ -5961,9 +6018,9 @@
             }, 100);
 
             updateCameraConstraintControlsState();
-            toggleTimelapseButton.textContent = t('btnStopTimelapse');
             toggleTimelapseButton.classList.add('recording');
             toggleTimelapseButton.setAttribute('aria-pressed', 'true');
+            updateTimelapseButtonLabel();
             syncRecordingModeButtons();
 
             const w = video.videoWidth || 1280;
@@ -6011,9 +6068,9 @@
         async function stopTimelapse(playbackFpsOverride = null) {
             if (!timelapseCapturing && getTimelapseFrameCount() === 0) {
                 // Still reset UI in case.
-                toggleTimelapseButton.textContent = t('btnStartTimelapse');
                 toggleTimelapseButton.classList.remove('recording');
                 toggleTimelapseButton.setAttribute('aria-pressed', 'false');
+                updateTimelapseButtonLabel();
                 syncRecordingModeButtons();
                 updateCameraConstraintControlsState();
                 updateTimelapseInfoIdle();
@@ -6036,9 +6093,9 @@
 
             const playbackFps = playbackFpsOverride ?? Math.max(5, parseInt(timelapsePlaybackFpsInput.value || '30', 10));
 
-            toggleTimelapseButton.textContent = t('btnStartTimelapse');
             toggleTimelapseButton.classList.remove('recording');
             toggleTimelapseButton.setAttribute('aria-pressed', 'false');
+            updateTimelapseButtonLabel();
             syncRecordingModeButtons();
 
             if (timelapseFrameStore) {
@@ -6942,18 +6999,21 @@
             }
         });
 
-        if (timelapseIntervalInput && timelapseFramesInput && timelapsePlaybackFpsInput) {
+        if (timelapseIntervalInput && timelapseDurationInput && timelapsePlaybackFpsInput) {
             const refreshTimelapseInfo = () => {
                 if (!timelapseCapturing) updateTimelapseInfoIdle();
+                updateTimelapseButtonLabel();
             };
             timelapseIntervalInput.addEventListener('input', refreshTimelapseInfo);
             timelapseIntervalInput.addEventListener('change', refreshTimelapseInfo);
-            timelapseFramesInput.addEventListener('input', refreshTimelapseInfo);
-            timelapseFramesInput.addEventListener('change', refreshTimelapseInfo);
+            timelapseDurationInput.addEventListener('input', refreshTimelapseInfo);
+            timelapseDurationInput.addEventListener('change', refreshTimelapseInfo);
             timelapsePlaybackFpsInput.addEventListener('input', refreshTimelapseInfo);
             timelapsePlaybackFpsInput.addEventListener('change', refreshTimelapseInfo);
         }
+        window.addEventListener('resize', updateTimelapseButtonLabel);
         updateTimelapseInfoIdle();
+        updateTimelapseButtonLabel();
 
         if (stopMotionFrameButton) {
             stopMotionFrameButton.addEventListener('click', () => {
