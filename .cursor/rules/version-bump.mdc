@@ -1,0 +1,44 @@
+---
+description: Mandatory semver version bump on every change to this repo
+alwaysApply: true
+---
+
+# Mandatory version bump on every change
+
+**Every** change to this repository must bump the semver version in the **same commit** as the change. There are no exceptions: not for “trivial” edits, docs-only updates, chores, comments, formatting, or refactors.
+
+## Files that must stay in sync
+
+The following must always contain the **identical** version string (semver `MAJOR.MINOR.PATCH` without a `v` prefix in machine-readable files; the app footer displays a leading `v` for humans):
+
+| File | Where |
+|------|--------|
+| `index.html` | `#app-footer-version` (numeric part only after the separate `v` in markup) |
+| `package.json` | `"version"` field |
+| `version.txt` | entire file, single line, no `v` prefix |
+
+Scanned manifests not present in this repo (no action unless added later): `app.json`, `Cargo.toml`, `pyproject.toml`, `setup.cfg`, `manifest.json`, `pubspec.yaml`, `Info.plist`. If any are introduced, add them to this list and to `AGENTS.md` and keep them in sync.
+
+## Semver rules
+
+- **Patch** `x.y.Z → x.y.(Z+1)`: bug fixes, documentation, chores, deployment-only fixes, internal refactors with **no** user-visible behavior change.
+- **Minor** `x.Y.z → x.(Y+1).0`: new user-visible feature, new option, new UI, new translation, etc. (non-breaking).
+- **Major** `X.y.z → (X+1).0.0`: breaking changes for users or documented public behavior.
+
+## Worked example
+
+You fix a typo in `README.md` only. That still requires a **patch** bump: e.g. `1.0.0` → `1.0.1` in `package.json`, `version.txt`, and the footer span `#app-footer-version` in `index.html`, all in one commit.
+
+You add a new button to the UI. That is at least a **minor** bump: e.g. `1.0.1` → `1.1.0` across all version locations.
+
+You remove or rename a public URL path or change saved file formats in a breaking way. Use a **major** bump: e.g. `1.1.0` → `2.0.0`.
+
+## Pre-commit checklist
+
+1. Decide **patch / minor / major** using the rules above.
+2. Set the new version string in **`package.json`**, **`version.txt`**, and **`index.html`** (`#app-footer-version`).
+3. Confirm there is no second “version” source left stale (search the repo for the old version if unsure).
+4. Commit the functional change and version updates **together** (single commit).
+5. Re-read `AGENTS.md` for the same policy when using other AI or automation tools.
+
+Related: root **`AGENTS.md`** (same policy for non-Cursor agents).
