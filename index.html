@@ -1231,6 +1231,12 @@
             line-height: 1.25;
             margin: 0;
         }
+        .timelapse-info-value.timelapse-info-value--dropped {
+            color: #b91c1c;
+        }
+        html.mc-theme-dark .timelapse-info-value.timelapse-info-value--dropped {
+            color: #fca5a5;
+        }
         .timelapse-settings label {
             display: flex;
             align-items: center;
@@ -2309,7 +2315,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.0.1</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.1.0</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -6304,7 +6310,10 @@
             }
             timelapseRecordStartTime = 0;
             const p = getTimelapseParsedSettings();
-            if (timelapseInfoFrames) timelapseInfoFrames.textContent = formatTimelapseFrameCounter(0, p.targetFrames);
+            if (timelapseInfoFrames) {
+                timelapseInfoFrames.classList.remove('timelapse-info-value--dropped');
+                timelapseInfoFrames.textContent = formatTimelapseFrameCounter(0, p.targetFrames);
+            }
             if (timelapseInfoRecord) {
                 timelapseInfoRecord.textContent = `${formatTimelapseHmsTriple(0)} / ${formatTimelapseHmsTriple(p.recordPlanSec)}`;
             }
@@ -6320,7 +6329,10 @@
             const elapsed =
                 timelapseRecordStartTime > 0 ? (performance.now() - timelapseRecordStartTime) / 1000 : 0;
             const playbackSoFar = Math.floor(n / p.fps);
-            if (timelapseInfoFrames) timelapseInfoFrames.textContent = formatTimelapseFrameCounter(n, p.targetFrames);
+            if (timelapseInfoFrames) {
+                timelapseInfoFrames.textContent = formatTimelapseFrameCounter(n, p.targetFrames);
+                timelapseInfoFrames.classList.toggle('timelapse-info-value--dropped', !!p.hadDroppedFrames);
+            }
             if (timelapseInfoRecord) {
                 timelapseInfoRecord.textContent = `${formatTimelapseHmsTriple(elapsed)} / ${formatTimelapseHmsTriple(p.recordPlanSec)}`;
             }
@@ -6334,6 +6346,7 @@
             const playDone = Math.floor(completedFrames / p.fps);
             if (timelapseInfoFrames) {
                 timelapseInfoFrames.textContent = formatTimelapseFrameCounter(completedFrames, totalEncodeFrames);
+                timelapseInfoFrames.classList.toggle('timelapse-info-value--dropped', !!p.hadDroppedFrames);
             }
             if (timelapseInfoRecord) {
                 timelapseInfoRecord.textContent = `${formatTimelapseHmsTriple(recordWallSec)} / ${formatTimelapseHmsTriple(p.recordPlanSec)}`;
@@ -6361,11 +6374,14 @@
                 intervalSec: intervalSeconds,
                 fps: playbackFps,
                 recordPlanSec: parsed.recordPlanSec,
-                playbackPlanSec: parsed.playbackPlanSec
+                playbackPlanSec: parsed.playbackPlanSec,
+                hadDroppedFrames: false
             };
 
             timelapseCapturing = true;
             timelapseRecordStartTime = performance.now();
+            const anchorMs = timelapseRecordStartTime;
+            const intervalMs = intervalSeconds * 1000;
             timelapseRecordClockTimer = setInterval(() => {
                 if (timelapseCapturing) updateTimelapseInfoDuringCapture();
             }, 100);
@@ -6390,6 +6406,22 @@
                 timelapseCaptureTimer = setTimeout(runCaptureStep, delayMs);
             };
 
+            const scheduleFromGridAfterCapture = () => {
+                if (!timelapseCapturing || !timelapseFrameStore) return;
+                const n = getTimelapseFrameCount();
+                let targetMs = anchorMs + n * intervalMs;
+                let skips = 0;
+                const now = performance.now();
+                while (targetMs < now && skips < 10000) {
+                    targetMs += intervalMs;
+                    skips++;
+                }
+                if (skips > 0) {
+                    timelapseSessionCache.hadDroppedFrames = true;
+                }
+                scheduleNextCapture(Math.max(0, targetMs - now));
+            };
+
             const runCaptureStep = async () => {
                 if (!timelapseCapturing || captureBusy || !timelapseFrameStore) return;
                 captureBusy = true;
@@ -6403,12 +6435,12 @@
                         return;
                     }
                     if (timelapseCapturing) {
-                        scheduleNextCapture(intervalSeconds * 1000);
+                        scheduleFromGridAfterCapture();
                     }
                 } catch (e) {
                     console.error('Timelapse capture frame failed:', e);
                     if (timelapseCapturing) {
-                        scheduleNextCapture(intervalSeconds * 1000);
+                        scheduleNextCapture(Math.max(500, intervalMs));
                     }
                 } finally {
                     captureBusy = false;
