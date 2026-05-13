@@ -27,9 +27,9 @@ Scanned manifests not present in this repo (no action unless added later): `app.
 
 ## Worked example
 
-You fix a typo in `README.md` only. That still requires a **patch** bump: e.g. `1.0.0` → `1.0.1` in `package.json`, `version.txt`, and the footer span `#app-footer-version` in `index.html`, all in one commit.
+You fix a typo in `README.md` only. That still requires a **patch** bump: e.g. `1.0.1` → `1.0.2` in `package.json`, `version.txt`, and the footer span `#app-footer-version` in `index.html`, all in one commit.
 
-You add a new button to the UI. That is at least a **minor** bump: e.g. `1.0.1` → `1.1.0` across all version locations.
+You add a new button to the UI. That is at least a **minor** bump: e.g. `1.0.2` → `1.1.0` across all version locations.
 
 You remove or rename a public URL path or change saved file formats in a breaking way. Use a **major** bump: e.g. `1.1.0` → `2.0.0`.
 
