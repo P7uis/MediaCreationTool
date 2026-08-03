@@ -14,8 +14,16 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f4f4f4" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#131316" media="(prefers-color-scheme: dark)">
+    <meta name="application-name" content="Media Creation Tool">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Media Creation Tool">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Media-opname</title>
-    <link rel="icon" type="image/x-icon" href="/images/glados.ico">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" type="image/x-icon" href="./images/glados.ico">
+    <link rel="apple-touch-icon" href="./images/icon-192.png">
     <style>
         :root {
             --mc-bg: #f4f4f4;
@@ -2315,7 +2323,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.1.0</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.0</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -7595,6 +7603,14 @@
         // Initialize toggle UI once DOM is ready.
         updateMirrorToggleUI();
         updateMuteToggleUI();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((err) => {
+                    console.warn('Service worker registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
