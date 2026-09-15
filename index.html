@@ -2323,7 +2323,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.1</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.2</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -3016,6 +3016,129 @@
             return out;
         }
 
+        const supportedCameraResolutionCache = new Map();
+
+        function getResolutionChoiceKey(w, h) {
+            return `${Math.floor(w)}x${Math.floor(h)}`;
+        }
+
+        function getTrackSettingsResolution(videoTrack) {
+            const st = videoTrack && videoTrack.getSettings ? videoTrack.getSettings() : {};
+            const w = Number.isFinite(st.width) ? Math.floor(st.width) : NaN;
+            const h = Number.isFinite(st.height) ? Math.floor(st.height) : NaN;
+            if (w >= 16 && h >= 16) return { w, h };
+            return null;
+        }
+
+        function getSelectedResolutionChoice() {
+            const resVal = cameraResolutionSelect && cameraResolutionSelect.value;
+            if (!resVal || !String(resVal).toLowerCase().includes('x')) return null;
+            const parts = String(resVal).toLowerCase().split('x');
+            const w = parseInt(parts[0], 10);
+            const h = parseInt(parts[1], 10);
+            if (Number.isFinite(w) && Number.isFinite(h) && w >= 16 && h >= 16) {
+                return { w, h };
+            }
+            return null;
+        }
+
+        function sortResolutionChoicesForDefault(a, b, caps) {
+            const areaDelta = b.w * b.h - a.w * a.h;
+            if (areaDelta !== 0) return areaDelta;
+            return compareResolutionChoicesNativeFirst(a, b, caps);
+        }
+
+        async function cameraAcceptsExactResolution(deviceId, w, h) {
+            const videoConstraints = {
+                width: { exact: w },
+                height: { exact: h }
+            };
+            if (deviceId && String(deviceId).length > 0) {
+                videoConstraints.deviceId = { exact: deviceId };
+            }
+
+            let stream = null;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: videoConstraints,
+                    audio: false
+                });
+                const track = stream.getVideoTracks()[0];
+                const st = track && track.getSettings ? track.getSettings() : {};
+                return Math.floor(st.width || 0) === w && Math.floor(st.height || 0) === h;
+            } catch (e) {
+                return false;
+            } finally {
+                if (stream) stream.getTracks().forEach((track) => track.stop());
+            }
+        }
+
+        async function trackAcceptsExactResolution(videoTrack, w, h) {
+            if (!videoTrack || typeof videoTrack.applyConstraints !== 'function') return false;
+            try {
+                await videoTrack.applyConstraints({
+                    width: { exact: w },
+                    height: { exact: h }
+                });
+                const st = videoTrack.getSettings ? videoTrack.getSettings() : {};
+                return Math.floor(st.width || 0) === w && Math.floor(st.height || 0) === h;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function buildSupportedResolutionChoices(videoTrack, deviceId, caps) {
+            const actual = getTrackSettingsResolution(videoTrack);
+            const cacheKey = deviceId && String(deviceId).length > 0 ? String(deviceId) : '__default_camera__';
+            const cached = supportedCameraResolutionCache.get(cacheKey);
+            if (cached && cached.length > 0) return cached.map((p) => ({ ...p }));
+
+            const candidates = buildResolutionChoices(caps);
+            if (actual && !candidates.some((p) => p.w === actual.w && p.h === actual.h)) {
+                candidates.push(actual);
+            }
+            candidates.sort((a, b) => sortResolutionChoicesForDefault(a, b, caps));
+
+            const supported = [];
+            const seen = new Set();
+            for (const cand of candidates) {
+                const key = getResolutionChoiceKey(cand.w, cand.h);
+                if (seen.has(key)) continue;
+                seen.add(key);
+
+                if (actual && cand.w === actual.w && cand.h === actual.h) {
+                    supported.push({ w: cand.w, h: cand.h });
+                    continue;
+                }
+
+                if (
+                    (await trackAcceptsExactResolution(videoTrack, cand.w, cand.h)) ||
+                    (await cameraAcceptsExactResolution(deviceId, cand.w, cand.h))
+                ) {
+                    supported.push({ w: cand.w, h: cand.h });
+                }
+            }
+
+            if (actual && typeof videoTrack.applyConstraints === 'function') {
+                try {
+                    await videoTrack.applyConstraints({
+                        width: { exact: actual.w },
+                        height: { exact: actual.h }
+                    });
+                } catch (e) {
+                    /* The startup path will reopen the selected exact mode below. */
+                }
+            }
+
+            if (supported.length === 0 && actual) {
+                supported.push(actual);
+            }
+
+            supported.sort((a, b) => sortResolutionChoicesForDefault(a, b, caps));
+            supportedCameraResolutionCache.set(cacheKey, supported.map((p) => ({ ...p })));
+            return supported;
+        }
+
         /** Matches the default entry in resolution dropdown — max pixels at preferred native aspect when possible. */
         function getIdealMaxNativeDimensionsFromCaps(caps) {
             const choices = buildResolutionChoices(caps);
@@ -3115,19 +3238,25 @@
             if (videoDigitalZoom) videoDigitalZoom.style.visibility = '';
         }
 
-        /** Populate resolution / FPS UI from an already-open video track (no extra getUserMedia). */
-        function fillCameraControlsFromTrack(videoTrack, opts = {}) {
+        /** Populate resolution / FPS UI from an already-open video track. */
+        async function fillCameraControlsFromTrack(videoTrack, opts = {}) {
             if (!videoTrack || !cameraResolutionSelect || !cameraFpsSelect) return;
 
             const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
             window.cameraCapabilities = caps;
+            const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
+            const deviceId =
+                (settings && settings.deviceId) ||
+                opts.deviceId ||
+                currentCameraDeviceId ||
+                '';
 
             const forceHighest = opts.defaultToHighestResAndFps === true;
             const prevRes = forceHighest ? '' : cameraResolutionSelect.value;
             const prevFps = forceHighest ? '' : cameraFpsSelect.value;
 
             cameraResolutionSelect.innerHTML = '';
-            const resChoices = buildResolutionChoices(caps);
+            const resChoices = await buildSupportedResolutionChoices(videoTrack, deviceId, caps);
             if (resChoices.length === 0) {
                 const o = document.createElement('option');
                 o.value = '';
@@ -3146,7 +3275,7 @@
                 if (prevRes && keys.has(prevRes)) {
                     cameraResolutionSelect.value = prevRes;
                 } else {
-                    /* buildResolutionChoices: native aspect (max FOV) first, then max pixel count. */
+                    /* Supported choices are sorted by max pixel count so the default is the highest real mode. */
                     cameraResolutionSelect.selectedIndex = 0;
                 }
             }
@@ -3200,8 +3329,8 @@
                 const w = parseInt(parts[0], 10);
                 const h = parseInt(parts[1], 10);
                 if (Number.isFinite(w) && Number.isFinite(h) && w >= 16 && h >= 16) {
-                    videoConstraints.width = { ideal: w };
-                    videoConstraints.height = { ideal: h };
+                    videoConstraints.width = { exact: w };
+                    videoConstraints.height = { exact: h };
                 }
             } else if (caps && caps.width && caps.height) {
                 const ideal = getIdealMaxNativeDimensionsFromCaps(caps);
@@ -4397,7 +4526,37 @@
 
                 currentStream = stream;
 
-                const videoTrack = currentStream.getVideoTracks()[0];
+                let videoTrack = currentStream.getVideoTracks()[0];
+                if (preferMinimalVideo) {
+                    await fillCameraControlsFromTrack(videoTrack, {
+                        deviceId,
+                        defaultToHighestResAndFps
+                    });
+
+                    const selectedResolution = getSelectedResolutionChoice();
+                    const actualResolution = getTrackSettingsResolution(videoTrack);
+                    if (
+                        selectedResolution &&
+                        (!actualResolution ||
+                            selectedResolution.w !== actualResolution.w ||
+                            selectedResolution.h !== actualResolution.h)
+                    ) {
+                        try {
+                            const exactStream = await navigator.mediaDevices.getUserMedia({
+                                video: getVideoConstraintsFromControls(deviceId),
+                                audio: audioConstraints
+                            });
+                            currentStream.getTracks().forEach((track) => track.stop());
+                            currentStream = exactStream;
+                            videoTrack = currentStream.getVideoTracks()[0];
+                        } catch (e) {
+                            console.warn('Camera exact default reopen failed:', e);
+                        }
+                    }
+                } else if (videoTrack && videoTrack.getCapabilities) {
+                    window.cameraCapabilities = videoTrack.getCapabilities();
+                }
+
                 if (videoTrack) {
                     videoTrack.addEventListener(
                         'ended',
@@ -4406,13 +4565,6 @@
                         },
                         { once: true }
                     );
-                }
-                if (preferMinimalVideo) {
-                    fillCameraControlsFromTrack(videoTrack, {
-                        defaultToHighestResAndFps
-                    });
-                } else if (videoTrack && videoTrack.getCapabilities) {
-                    window.cameraCapabilities = videoTrack.getCapabilities();
                 }
 
                 const settings = videoTrack && videoTrack.getSettings ? videoTrack.getSettings() : {};
