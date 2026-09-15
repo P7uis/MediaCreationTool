@@ -2323,7 +2323,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.0</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.1</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -3241,7 +3241,11 @@
             if (!currentCameraDeviceId) return;
             if (cameraRecordingActive || timelapseCapturing) return;
             if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
-            await startCamera(currentCameraDeviceId);
+            try {
+                await startCamera(currentCameraDeviceId);
+            } catch (e) {
+                console.warn('Camera restart for selected constraints failed:', e);
+            }
         }
 
         /** Same negotiation as changing resolution: reopen with getVideoConstraintsFromControls (not device-only). */
@@ -3354,8 +3358,8 @@
         let streamDrawRequestId = null;
         let streamRecordingActive = false;
 
-        /** Timesliced MediaRecorder; smaller slices keep in-flight encoded blobs smaller before OPFS/disk write. */
-        const RECORDING_TIMESLICE_MS = 500;
+        /** Timesliced MediaRecorder; bounded slices keep in-flight encoded blobs limited before OPFS/disk write. */
+        const RECORDING_TIMESLICE_MS = 2000;
         let recordingStatusNoticeTimer = null;
         let recordingMemoryHintShown = false;
         let globalProgressToken = 0;
@@ -4171,6 +4175,11 @@
 
         let cameraAutoReconnectInFlight = false;
 
+        function hasLiveVideoStream(stream) {
+            const track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+            return !!(track && track.readyState !== 'ended');
+        }
+
         async function handleCameraDisconnected(endedVideoTrack) {
             if (cameraAutoReconnectInFlight) return;
             cameraAutoReconnectInFlight = true;
@@ -4195,22 +4204,22 @@
                     currentCameraDeviceId = cand.deviceId;
                     const idx = cameraList.findIndex((d) => d.deviceId === cand.deviceId);
                     if (idx >= 0) currentCameraIndex = idx;
-                    await startCamera(cand.deviceId, {
-                        preferMinimalVideo: true,
-                        defaultToHighestResAndFps: true
-                    });
-                    if (currentStream) break;
+                    try {
+                        await startCamera(cand.deviceId, {
+                            preferMinimalVideo: true,
+                            defaultToHighestResAndFps: true
+                        });
+                        if (hasLiveVideoStream(currentStream)) break;
+                    } catch (e) {
+                        console.warn('Camera reconnect candidate failed:', e);
+                    }
                 }
 
-                if (!currentStream) {
+                if (!hasLiveVideoStream(currentStream)) {
                     await startCamera('', {
                         preferMinimalVideo: true,
                         defaultToHighestResAndFps: true
                     });
-                }
-
-                if (currentStream) {
-                    await refineCameraStreamToMatchControls();
                 }
 
                 await refreshMediaDeviceLists();
@@ -4293,7 +4302,6 @@
                     currentCameraDeviceId = deviceId;
                     currentCameraIndex = 0;
                     await startCamera(deviceId, { preferMinimalVideo: true });
-                    await refineCameraStreamToMatchControls();
                     if (currentStream && video) {
                         try {
                             await waitForVideoFrameDimensions(video);
@@ -4340,6 +4348,7 @@
         async function startCamera(deviceId, options = {}) {
             let preferMinimalVideo = options.preferMinimalVideo === true;
             const defaultToHighestResAndFps = options.defaultToHighestResAndFps === true;
+            const oldStream = currentStream;
             try {
                 const audioConstraints = currentMicDeviceId
                     ? {
@@ -4369,14 +4378,6 @@
                     video: videoConstraints,
                     audio: audioConstraints
                 };
-
-                if (currentStream) {
-                    currentStream.getTracks().forEach((track) => track.stop());
-                    currentStream = null;
-                }
-                try {
-                    if (video) video.srcObject = null;
-                } catch (e) {}
 
                 let stream;
                 try {
@@ -4414,24 +4415,39 @@
                     window.cameraCapabilities = videoTrack.getCapabilities();
                 }
 
-                const settings = videoTrack.getSettings();
+                const settings = videoTrack && videoTrack.getSettings ? videoTrack.getSettings() : {};
                 console.log('Active camera settings:', settings);
 
                 updateDeviceInfo(settings);
 
-                video.srcObject = currentStream;
+                if (video) video.srcObject = currentStream;
                 updateMirroring();
 
-                video.setAttribute('playsinline', true);
-                video.setAttribute('controls', false);
+                if (oldStream && oldStream !== currentStream) {
+                    oldStream.getTracks().forEach((track) => track.stop());
+                }
+
+                if (video) {
+                    video.setAttribute('playsinline', true);
+                    video.setAttribute('controls', false);
+                }
 
                 updateZoomUI();
                 updateCameraConstraintControlsState();
                 applyStopMotionAuxiliaryLocks();
             } catch (err) {
                 console.error('Error starting camera: ' + err);
-                setCameraControlsFallbackDefaults();
+                if (!oldStream) {
+                    setCameraControlsFallbackDefaults();
+                } else {
+                    currentStream = oldStream;
+                    if (video && video.srcObject !== oldStream) video.srcObject = oldStream;
+                    const oldTrack = oldStream.getVideoTracks && oldStream.getVideoTracks()[0];
+                    const oldSettings = oldTrack && oldTrack.getSettings ? oldTrack.getSettings() : {};
+                    updateDeviceInfo(oldSettings);
+                }
                 applyStopMotionAuxiliaryLocks();
+                throw err;
             }
         }
 
@@ -7280,6 +7296,8 @@
             if (cameraList.length === 0) return;
             if (cameraList.length === 1) return;
 
+            const previousCameraIndex = currentCameraIndex;
+            const previousCameraDeviceId = currentCameraDeviceId;
             currentCameraIndex = (currentCameraIndex + 1) % cameraList.length;
             const chosen = cameraList[currentCameraIndex];
             let deviceId = chosen && chosen.deviceId;
@@ -7296,11 +7314,17 @@
                 return;
             }
 
-            await startCamera(deviceId, {
-                preferMinimalVideo: true,
-                defaultToHighestResAndFps: true
-            });
-            await refineCameraStreamToMatchControls();
+            try {
+                await startCamera(deviceId, {
+                    preferMinimalVideo: true,
+                    defaultToHighestResAndFps: true
+                });
+            } catch (e) {
+                currentCameraIndex = previousCameraIndex;
+                currentCameraDeviceId = previousCameraDeviceId;
+                console.warn('Switch camera failed:', e);
+                return;
+            }
 
             await refreshMediaDeviceLists();
             const track = currentStream && currentStream.getVideoTracks()[0];
