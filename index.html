@@ -405,6 +405,7 @@
             color: var(--mc-label);
             text-transform: uppercase;
             letter-spacing: 0.03em;
+            white-space: nowrap;
         }
         .camera-android-usb-hint {
             margin: 0 0 10px;
@@ -457,7 +458,7 @@
                 flex-wrap: nowrap;
             }
             .camera-constraint-field {
-                flex: 0 1 148px;
+                flex: 0 0 150px;
             }
             .camera-constraint-field select {
                 min-width: 0;
@@ -1490,21 +1491,30 @@
                 gap: 20px;
             }
             .camera-constraints-bar {
+                display: flex;
+                align-items: flex-end;
+                justify-content: flex-start;
+                gap: 12px 20px;
+            }
+            .camera-constraints-bar:has(.camera-constraints-progress.progress-container--active) {
                 display: grid;
                 grid-template-columns: minmax(0, 1fr) clamp(240px, min(600px, 58vw), 600px);
-                align-items: flex-end;
                 column-gap: 20px;
             }
             .camera-constraints-fields {
-                grid-column: 1;
-                justify-content: center;
+                justify-content: flex-start;
                 flex-wrap: nowrap;
-                width: calc(100% - var(--mc-preview-right-offset, 62px));
+                width: auto;
                 max-width: 100%;
+                margin-right: 0;
+            }
+            .camera-constraints-bar:has(.camera-constraints-progress.progress-container--active) .camera-constraints-fields {
+                grid-column: 1;
+                width: calc(100% - var(--mc-preview-right-offset, 62px));
                 margin-right: var(--mc-preview-right-offset, 62px);
             }
             .camera-constraint-field {
-                flex: 0 1 150px;
+                flex: 0 0 150px;
             }
             .camera-constraints-progress {
                 grid-column: 2;
@@ -2340,7 +2350,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.7</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.8</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
