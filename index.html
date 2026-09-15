@@ -2323,7 +2323,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.4</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.5</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -3042,6 +3042,24 @@
             return null;
         }
 
+        function getTrackSettingsFrameRate(videoTrack) {
+            const st = videoTrack && videoTrack.getSettings ? videoTrack.getSettings() : {};
+            const fps = Number.isFinite(st.frameRate) ? st.frameRate : NaN;
+            if (fps > 0) return Math.round(fps * 100) / 100;
+            return null;
+        }
+
+        function getSelectedFpsChoice() {
+            const fpsVal = cameraFpsSelect && cameraFpsSelect.value;
+            const fps = fpsVal ? parseFloat(String(fpsVal).replace(',', '.')) : NaN;
+            if (Number.isFinite(fps) && fps > 0) return fps;
+            return null;
+        }
+
+        function fpsValuesMatch(a, b) {
+            return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < 0.75;
+        }
+
         function syncResolutionSelectToActualTrack(videoTrack, deviceId = '') {
             if (!cameraResolutionSelect) return;
             const actual = getTrackSettingsResolution(videoTrack);
@@ -3071,6 +3089,39 @@
                 const cacheKey = deviceId && String(deviceId).length > 0 ? String(deviceId) : '__default_camera__';
                 supportedCameraResolutionCache.set(cacheKey, [{ w: actual.w, h: actual.h }]);
             }
+        }
+
+        function syncFpsSelectToActualTrack(videoTrack) {
+            if (!cameraFpsSelect) return;
+            const actualFps = getTrackSettingsFrameRate(videoTrack);
+            if (actualFps == null) return;
+
+            const selectedFps = getSelectedFpsChoice();
+            if (selectedFps != null && fpsValuesMatch(selectedFps, actualFps)) return;
+
+            const actualValue = formatFpsLabel(actualFps);
+            let actualOption = Array.from(cameraFpsSelect.options).find((opt) =>
+                fpsValuesMatch(parseFloat(String(opt.value).replace(',', '.')), actualFps)
+            );
+            if (!actualOption) {
+                actualOption = document.createElement('option');
+                actualOption.value = actualValue;
+                actualOption.textContent = `${actualValue} fps`;
+                cameraFpsSelect.appendChild(actualOption);
+            }
+
+            for (const opt of Array.from(cameraFpsSelect.options)) {
+                const optFps = parseFloat(String(opt.value).replace(',', '.'));
+                if (!fpsValuesMatch(optFps, actualFps) && opt.selected) {
+                    opt.remove();
+                }
+            }
+            cameraFpsSelect.value = actualOption.value;
+        }
+
+        function syncCameraControlsToActualTrack(videoTrack, deviceId = '') {
+            syncResolutionSelectToActualTrack(videoTrack, deviceId);
+            syncFpsSelectToActualTrack(videoTrack);
         }
 
         function sortResolutionChoicesForDefault(a, b, caps) {
@@ -3445,7 +3496,7 @@
 
             await videoTrack.applyConstraints(constraints);
             await waitForCameraSettingsToSettle();
-            syncResolutionSelectToActualTrack(videoTrack, currentCameraDeviceId);
+            syncCameraControlsToActualTrack(videoTrack, currentCameraDeviceId);
             const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
             updateDeviceInfo(settings);
             updateZoomUI();
@@ -3477,7 +3528,7 @@
                 addCameraEndedHandler(newVideoTrack);
                 if (video) video.srcObject = currentStream;
                 await waitForCameraSettingsToSettle();
-                syncResolutionSelectToActualTrack(newVideoTrack, deviceId);
+                syncCameraControlsToActualTrack(newVideoTrack, deviceId);
                 const settings = newVideoTrack.getSettings ? newVideoTrack.getSettings() : {};
                 updateDeviceInfo(settings);
                 updateMirroring();
@@ -3506,7 +3557,7 @@
 
             const videoTrack = currentStream && currentStream.getVideoTracks()[0];
             if (videoTrack) {
-                syncResolutionSelectToActualTrack(videoTrack, currentCameraDeviceId);
+                syncCameraControlsToActualTrack(videoTrack, currentCameraDeviceId);
                 const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
                 updateDeviceInfo(settings);
             }
@@ -4688,7 +4739,7 @@
 
                 const settings = videoTrack && videoTrack.getSettings ? videoTrack.getSettings() : {};
                 console.log('Active camera settings:', settings);
-                syncResolutionSelectToActualTrack(videoTrack, deviceId);
+                syncCameraControlsToActualTrack(videoTrack, deviceId);
 
                 updateDeviceInfo(settings);
 
