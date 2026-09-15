@@ -2323,7 +2323,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.2</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.3</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -3040,6 +3040,37 @@
                 return { w, h };
             }
             return null;
+        }
+
+        function syncResolutionSelectToActualTrack(videoTrack, deviceId = '') {
+            if (!cameraResolutionSelect) return;
+            const actual = getTrackSettingsResolution(videoTrack);
+            if (!actual) return;
+
+            const actualKey = getResolutionChoiceKey(actual.w, actual.h);
+            const selected = getSelectedResolutionChoice();
+            const selectedMatchesActual =
+                selected && selected.w === actual.w && selected.h === actual.h;
+
+            const options = Array.from(cameraResolutionSelect.options);
+            let actualOption = options.find((opt) => opt.value === actualKey);
+            if (!actualOption) {
+                actualOption = document.createElement('option');
+                actualOption.value = actualKey;
+                actualOption.textContent = `${actual.w} × ${actual.h}`;
+                cameraResolutionSelect.appendChild(actualOption);
+            }
+
+            if (!selectedMatchesActual) {
+                for (const opt of Array.from(cameraResolutionSelect.options)) {
+                    if (opt.value !== actualKey && opt.selected) {
+                        opt.remove();
+                    }
+                }
+                cameraResolutionSelect.value = actualKey;
+                const cacheKey = deviceId && String(deviceId).length > 0 ? String(deviceId) : '__default_camera__';
+                supportedCameraResolutionCache.set(cacheKey, [{ w: actual.w, h: actual.h }]);
+            }
         }
 
         function sortResolutionChoicesForDefault(a, b, caps) {
@@ -4569,6 +4600,7 @@
 
                 const settings = videoTrack && videoTrack.getSettings ? videoTrack.getSettings() : {};
                 console.log('Active camera settings:', settings);
+                syncResolutionSelectToActualTrack(videoTrack, deviceId);
 
                 updateDeviceInfo(settings);
 
