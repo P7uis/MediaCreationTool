@@ -2323,7 +2323,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.5</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.6</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -2911,6 +2911,9 @@
             [320, 240]
         ];
         const STANDARD_CAMERA_FPS = [120, 90, 72, 60, 50, 48, 30, 25, 24, 20, 15, 10, 5];
+        const CAMERA_LOW_FPS_NATIVE_CUTOFF = 15;
+        const CAMERA_HIGH_RES_FPS_DROP_RATIO = 0.6;
+        const CAMERA_HIGH_RES_PIXEL_RATIO = 1.45;
 
         /** width/height; drivers sometimes leak pixel dimensions here (e.g. 1280), which must not be used as a ratio. */
         const CAMERA_ASPECT_RATIO_MIN = 0.35;
@@ -3130,6 +3133,17 @@
             return compareResolutionChoicesNativeFirst(a, b, caps);
         }
 
+        function normalizeCameraProbeResult(w, h, frameRate = null) {
+            return {
+                w: Math.floor(w),
+                h: Math.floor(h),
+                frameRate:
+                    Number.isFinite(frameRate) && frameRate > 0
+                        ? Math.round(frameRate * 100) / 100
+                        : null
+            };
+        }
+
         async function cameraAcceptsExactResolution(deviceId, w, h) {
             const videoConstraints = {
                 width: { exact: w },
@@ -3147,9 +3161,12 @@
                 });
                 const track = stream.getVideoTracks()[0];
                 const st = track && track.getSettings ? track.getSettings() : {};
-                return Math.floor(st.width || 0) === w && Math.floor(st.height || 0) === h;
+                if (Math.floor(st.width || 0) === w && Math.floor(st.height || 0) === h) {
+                    return normalizeCameraProbeResult(w, h, st.frameRate);
+                }
+                return null;
             } catch (e) {
-                return false;
+                return null;
             } finally {
                 if (stream) stream.getTracks().forEach((track) => track.stop());
             }
@@ -3163,10 +3180,37 @@
                     height: { exact: h }
                 });
                 const st = videoTrack.getSettings ? videoTrack.getSettings() : {};
-                return Math.floor(st.width || 0) === w && Math.floor(st.height || 0) === h;
+                if (Math.floor(st.width || 0) === w && Math.floor(st.height || 0) === h) {
+                    return normalizeCameraProbeResult(w, h, st.frameRate);
+                }
+                return null;
             } catch (e) {
-                return false;
+                return null;
             }
+        }
+
+        function filterLikelyUpscaledResolutionChoices(supported) {
+            if (!supported || supported.length < 2) return supported;
+            const withFps = supported.filter((p) => Number.isFinite(p.frameRate) && p.frameRate > 0);
+            if (withFps.length < 2) return supported;
+
+            return supported.filter((cand) => {
+                const candPixels = cand.w * cand.h;
+                if (!Number.isFinite(cand.frameRate) || cand.frameRate >= CAMERA_LOW_FPS_NATIVE_CUTOFF) {
+                    return true;
+                }
+
+                const healthierLower = withFps.some((other) => {
+                    const otherPixels = other.w * other.h;
+                    return (
+                        otherPixels < candPixels / CAMERA_HIGH_RES_PIXEL_RATIO &&
+                        other.frameRate >= CAMERA_LOW_FPS_NATIVE_CUTOFF &&
+                        cand.frameRate < other.frameRate * CAMERA_HIGH_RES_FPS_DROP_RATIO
+                    );
+                });
+
+                return !healthierLower;
+            });
         }
 
         async function buildSupportedResolutionChoices(videoTrack, deviceId, caps) {
@@ -3189,15 +3233,15 @@
                 seen.add(key);
 
                 if (actual && cand.w === actual.w && cand.h === actual.h) {
-                    supported.push({ w: cand.w, h: cand.h });
+                    supported.push(normalizeCameraProbeResult(cand.w, cand.h, getTrackSettingsFrameRate(videoTrack)));
                     continue;
                 }
 
-                if (
+                const probe =
                     (await trackAcceptsExactResolution(videoTrack, cand.w, cand.h)) ||
-                    (await cameraAcceptsExactResolution(deviceId, cand.w, cand.h))
-                ) {
-                    supported.push({ w: cand.w, h: cand.h });
+                    (await cameraAcceptsExactResolution(deviceId, cand.w, cand.h));
+                if (probe) {
+                    supported.push(probe);
                 }
             }
 
@@ -3213,12 +3257,14 @@
             }
 
             if (supported.length === 0 && actual) {
-                supported.push(actual);
+                supported.push(normalizeCameraProbeResult(actual.w, actual.h, getTrackSettingsFrameRate(videoTrack)));
             }
 
-            supported.sort((a, b) => sortResolutionChoicesForDefault(a, b, caps));
-            supportedCameraResolutionCache.set(cacheKey, supported.map((p) => ({ ...p })));
-            return supported;
+            const practical = filterLikelyUpscaledResolutionChoices(supported);
+            const choices = practical.length > 0 ? practical : supported;
+            choices.sort((a, b) => sortResolutionChoicesForDefault(a, b, caps));
+            supportedCameraResolutionCache.set(cacheKey, choices.map((p) => ({ ...p })));
+            return choices;
         }
 
         /** Matches the default entry in resolution dropdown — max pixels at preferred native aspect when possible. */

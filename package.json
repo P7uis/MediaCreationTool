@@ -1,6 +1,6 @@
 {
   "name": "mediacreationtool",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "private": true,
   "description": "Browser-based media capture tool"
 }

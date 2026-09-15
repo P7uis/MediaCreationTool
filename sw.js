@@ -1,4 +1,4 @@
-const MC_CACHE_VERSION = 'media-creation-tool-v1.2.5';
+const MC_CACHE_VERSION = 'media-creation-tool-v1.2.6';
 const MC_INDEX_URL = new URL('./index.html', self.registration.scope).toString();
 const MC_APP_SHELL = [
   new URL('./', self.registration.scope).toString(),
