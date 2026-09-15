@@ -378,9 +378,11 @@
             min-width: 0;
         }
         .camera-constraints-progress {
-            width: 100%;
+            display: none;
+            flex: 1 1 clamp(220px, 34vw, 420px);
+            width: auto;
             min-width: 0;
-            max-width: none;
+            max-width: 420px;
             margin-left: 0;
             align-self: center;
             box-sizing: border-box;
@@ -389,6 +391,7 @@
             transition: opacity 0.15s ease;
         }
         .camera-constraints-progress.progress-container--active {
+            display: flex;
             visibility: visible;
             opacity: 1;
         }
@@ -753,8 +756,7 @@
         .camera-constraints-progress.progress-container {
             margin-top: 0;
             color: var(--mc-muted);
-            min-height: 40px;
-            display: flex;
+            min-height: 32px;
             align-items: center;
         }
         .camera-constraints-progress .progress-row {
@@ -1496,11 +1498,6 @@
                 justify-content: flex-start;
                 gap: 12px 20px;
             }
-            .camera-constraints-bar:has(.camera-constraints-progress.progress-container--active) {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) clamp(240px, min(600px, 58vw), 600px);
-                column-gap: 20px;
-            }
             .camera-constraints-fields {
                 justify-content: flex-start;
                 flex-wrap: nowrap;
@@ -1508,22 +1505,15 @@
                 max-width: 100%;
                 margin-right: 0;
             }
-            .camera-constraints-bar:has(.camera-constraints-progress.progress-container--active) .camera-constraints-fields {
-                grid-column: 1;
-                width: calc(100% - var(--mc-preview-right-offset, 62px));
-                margin-right: var(--mc-preview-right-offset, 62px);
-            }
             .camera-constraint-field {
                 flex: 0 0 150px;
             }
             .camera-constraints-progress {
-                grid-column: 2;
-                width: 100%;
-                max-width: none;
-                justify-self: stretch;
+                flex: 1 1 clamp(220px, 32vw, 380px);
+                max-width: 380px;
                 margin-left: 0;
                 align-self: center;
-                padding-left: 8px;
+                padding-left: 0;
                 box-sizing: border-box;
             }
             .media-column {
@@ -2350,7 +2340,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.8</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.9</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
