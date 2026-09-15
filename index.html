@@ -452,6 +452,19 @@
             opacity: 0.65;
         }
 
+        @media (min-width: 520px) {
+            .camera-constraints-fields {
+                flex-wrap: nowrap;
+            }
+            .camera-constraint-field {
+                flex: 0 1 148px;
+            }
+            .camera-constraint-field select {
+                min-width: 0;
+                width: 100%;
+            }
+        }
+
         .preview-row {
             display: flex;
             flex-direction: row;
@@ -1485,9 +1498,13 @@
             .camera-constraints-fields {
                 grid-column: 1;
                 justify-content: center;
+                flex-wrap: nowrap;
                 width: calc(100% - var(--mc-preview-right-offset, 62px));
                 max-width: 100%;
                 margin-right: var(--mc-preview-right-offset, 62px);
+            }
+            .camera-constraint-field {
+                flex: 0 1 150px;
             }
             .camera-constraints-progress {
                 grid-column: 2;
@@ -2323,7 +2340,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.6</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.7</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
