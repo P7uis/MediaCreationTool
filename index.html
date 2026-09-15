@@ -2323,7 +2323,7 @@
 
     <!-- Version bump policy: EVERY change to this repository requires bumping the semver version — no exceptions (including docs, chores, refactors, and one-line fixes). Keep these files on the same version in one commit: index.html (footer, #app-footer-version), package.json ("version"), version.txt. Semver: patch (x.y.Z+1) for bug fixes, docs, chores, deployment-only fixes, internal refactors with no user-visible behavior change; minor (x.Y.0 → x.(Y+1).0) for new user-visible features, options, UI, translations; major ((X+1).0.0) for breaking changes. See .cursor/rules/version-bump.mdc and AGENTS.md. -->
     <footer id="app-footer" class="app-footer" role="contentinfo" aria-label="App version and credits">
-        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.3</span>
+        <span aria-hidden="true">v</span><span id="app-footer-version" class="app-footer-version">1.2.4</span>
         <span class="app-footer-sep" aria-hidden="true">·</span>
         <a class="app-footer-link" href="./LICENSE" title="GNU General Public License version 3">GPL v3</a>
         <span class="app-footer-sep" aria-hidden="true">·</span>
@@ -3397,35 +3397,127 @@
             return videoConstraints;
         }
 
+        function getTrackOnlyConstraintsFromVideoConstraints(videoConstraints) {
+            if (!videoConstraints || typeof videoConstraints !== 'object') return {};
+            const out = { ...videoConstraints };
+            delete out.deviceId;
+            return out;
+        }
+
+        function addCameraEndedHandler(videoTrack) {
+            if (!videoTrack) return;
+            videoTrack.addEventListener(
+                'ended',
+                () => {
+                    void handleCameraDisconnected(videoTrack);
+                },
+                { once: true }
+            );
+        }
+
+        async function waitForCameraSettingsToSettle() {
+            await new Promise((resolve) => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(resolve);
+                });
+            });
+        }
+
+        function selectedResolutionMatchesTrack(videoTrack) {
+            const selectedResolution = getSelectedResolutionChoice();
+            if (!selectedResolution) return true;
+            const actualResolution = getTrackSettingsResolution(videoTrack);
+            return !!(
+                actualResolution &&
+                selectedResolution.w === actualResolution.w &&
+                selectedResolution.h === actualResolution.h
+            );
+        }
+
+        async function applyControlsToCurrentVideoTrack() {
+            const videoTrack = currentStream && currentStream.getVideoTracks()[0];
+            if (!videoTrack || typeof videoTrack.applyConstraints !== 'function') return false;
+
+            const constraints = getTrackOnlyConstraintsFromVideoConstraints(
+                getVideoConstraintsFromControls(currentCameraDeviceId)
+            );
+            if (!constraints || Object.keys(constraints).length === 0) return false;
+
+            await videoTrack.applyConstraints(constraints);
+            await waitForCameraSettingsToSettle();
+            syncResolutionSelectToActualTrack(videoTrack, currentCameraDeviceId);
+            const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
+            updateDeviceInfo(settings);
+            updateZoomUI();
+            applyStopMotionAuxiliaryLocks();
+            return selectedResolutionMatchesTrack(videoTrack);
+        }
+
+        async function replaceVideoTrackInCurrentStreamForControls(deviceId) {
+            if (!currentStream) return false;
+            const videoConstraints = getVideoConstraintsFromControls(deviceId);
+            if (!videoConstraints || Object.keys(videoConstraints).length === 0) return false;
+
+            let videoOnlyStream = null;
+            try {
+                videoOnlyStream = await navigator.mediaDevices.getUserMedia({
+                    video: videoConstraints,
+                    audio: false
+                });
+                const newVideoTrack = videoOnlyStream.getVideoTracks()[0];
+                if (!newVideoTrack) return false;
+
+                currentStream.getVideoTracks().forEach((track) => {
+                    currentStream.removeTrack(track);
+                    track.stop();
+                });
+                currentStream.addTrack(newVideoTrack);
+                videoOnlyStream = null;
+
+                addCameraEndedHandler(newVideoTrack);
+                if (video) video.srcObject = currentStream;
+                await waitForCameraSettingsToSettle();
+                syncResolutionSelectToActualTrack(newVideoTrack, deviceId);
+                const settings = newVideoTrack.getSettings ? newVideoTrack.getSettings() : {};
+                updateDeviceInfo(settings);
+                updateMirroring();
+                updateZoomUI();
+                applyStopMotionAuxiliaryLocks();
+                return selectedResolutionMatchesTrack(newVideoTrack);
+            } finally {
+                if (videoOnlyStream) videoOnlyStream.getTracks().forEach((track) => track.stop());
+            }
+        }
+
         async function restartCameraPreviewForConstraints() {
             if (!currentCameraDeviceId) return;
             if (cameraRecordingActive || timelapseCapturing) return;
             if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
             try {
-                await startCamera(currentCameraDeviceId);
+                if (await applyControlsToCurrentVideoTrack()) return;
             } catch (e) {
-                console.warn('Camera restart for selected constraints failed:', e);
+                console.warn('Camera applyConstraints for selected controls failed:', e);
+            }
+            try {
+                if (await replaceVideoTrackInCurrentStreamForControls(currentCameraDeviceId)) return;
+            } catch (e) {
+                console.warn('Camera video-only restart for selected controls failed:', e);
+            }
+
+            const videoTrack = currentStream && currentStream.getVideoTracks()[0];
+            if (videoTrack) {
+                syncResolutionSelectToActualTrack(videoTrack, currentCameraDeviceId);
+                const settings = videoTrack.getSettings ? videoTrack.getSettings() : {};
+                updateDeviceInfo(settings);
             }
         }
 
-        /** Same negotiation as changing resolution: reopen with getVideoConstraintsFromControls (not device-only). */
+        /** Same negotiation as changing resolution: update / replace the video track without renegotiating audio. */
         async function refineCameraStreamToMatchControls() {
             if (!currentCameraDeviceId || cameraRecordingActive || timelapseCapturing) return;
             if (getStopMotionFrameCount() > 0 || stopMotionEncoding) return;
             if (!currentStream) return;
-            try {
-                await startCamera(currentCameraDeviceId);
-            } catch (e) {
-                console.warn('Refine camera stream to match controls failed:', e);
-                const id = currentCameraDeviceId;
-                if (id) {
-                    try {
-                        await startCamera(id, { preferMinimalVideo: true });
-                    } catch (e2) {
-                        console.warn('Camera minimal reopen failed:', e2);
-                    }
-                }
-            }
+            await restartCameraPreviewForConstraints();
         }
 
         // Recording mode buttons: exactly one of camera/screen/stream/audio may run at a time.
@@ -4573,30 +4665,26 @@
                             selectedResolution.h !== actualResolution.h)
                     ) {
                         try {
-                            const exactStream = await navigator.mediaDevices.getUserMedia({
-                                video: getVideoConstraintsFromControls(deviceId),
-                                audio: audioConstraints
-                            });
-                            currentStream.getTracks().forEach((track) => track.stop());
-                            currentStream = exactStream;
-                            videoTrack = currentStream.getVideoTracks()[0];
+                            await applyControlsToCurrentVideoTrack();
+                            videoTrack = currentStream && currentStream.getVideoTracks()[0];
                         } catch (e) {
-                            console.warn('Camera exact default reopen failed:', e);
+                            console.warn('Camera exact default applyConstraints failed:', e);
+                        }
+
+                        if (!selectedResolutionMatchesTrack(videoTrack)) {
+                            try {
+                                await replaceVideoTrackInCurrentStreamForControls(deviceId);
+                            } catch (e) {
+                                console.warn('Camera exact default video-only reopen failed:', e);
+                            }
+                            videoTrack = currentStream.getVideoTracks()[0];
                         }
                     }
                 } else if (videoTrack && videoTrack.getCapabilities) {
                     window.cameraCapabilities = videoTrack.getCapabilities();
                 }
 
-                if (videoTrack) {
-                    videoTrack.addEventListener(
-                        'ended',
-                        () => {
-                            void handleCameraDisconnected(videoTrack);
-                        },
-                        { once: true }
-                    );
-                }
+                addCameraEndedHandler(videoTrack);
 
                 const settings = videoTrack && videoTrack.getSettings ? videoTrack.getSettings() : {};
                 console.log('Active camera settings:', settings);
